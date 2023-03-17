@@ -15,6 +15,7 @@ def create_start_app_handler(
 ) -> Callable:  # type: ignore
 	async def start_app() -> None:
 		app.state.models_filler = ModelsFiller(get_meta())
+		ModelsFiller.set_current(app.state.models_filler)
 		await connect_to_db(app, settings)
 		await create_default_permissions(app)
 		await create_default_groups(app)

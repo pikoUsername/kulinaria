@@ -5,6 +5,7 @@ from app.db.engine import get_meta
 
 def test_filler_mixin() -> None:
 	filler = ModelsFiller(get_meta())
+	filler.set_current(filler)
 	filler_ctx = ModelsFiller.get_current()
 
 	assert id(filler) == id(filler_ctx)

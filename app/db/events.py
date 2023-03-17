@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from loguru import logger
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.core.settings.app import AppSettings
 from app.db.engine import Session, Meta, current_session
@@ -28,7 +28,6 @@ async def connect_to_db(app: FastAPI, settings: AppSettings) -> None:
 async def close_db_connection(app: FastAPI) -> None:
 	logger.info("Closing connection to database")
 
-	app.state.session.close_all()  # note: dont add up await expr
 	await app.state.engine.dispose()
 
 	logger.info("Connection closed")

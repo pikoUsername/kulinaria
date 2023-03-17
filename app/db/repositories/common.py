@@ -1,14 +1,14 @@
-from typing import Generic, TypeVar, List, Union, Dict, Any, Optional, Iterator, Tuple
+from typing import Generic, TypeVar, List, Union, Dict, Any, Optional, Tuple, Sequence
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 import sqlalchemy as sa
 from loguru import logger
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm.collections import InstrumentedList
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.engine import Result
 
 from app.db.repositories.base import BaseModel as DBBaseModel
+from app.services.filler import fill_db_obj, fill
 
 
 ExModelType = TypeVar("ExModelType", bound=DBBaseModel)
@@ -31,20 +31,15 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 	@classmethod
 	async def get(cls, db: AsyncSession, id: Any) -> Optional[ModelType]:
 		result = await db.execute(sa.select(cls.model).where(cls.model.id == id))
-		return result.first()
-
-	@classmethod
-	async def get_multi(
-			cls, db: AsyncSession, skip: int = 0, limit: int = 100
-	) -> List[ModelType]:
-		return await db.run_sync(db.query(cls.model).offset(skip).limit(limit).all())
+		result = result.first()
+		return result[0] if result else None
 
 	@classmethod
 	async def get_by_values(
 			cls, db: AsyncSession, values: list[Any], key: str = "id"
-	) -> Optional[Iterator[ModelType]]:
+	) -> Optional[Sequence[ModelType]]:
 		stmt = sa.select(cls.model).filter_by(**{key: x for x in values})
-		result = await db.execute(stmt)
+		result: Result = await db.execute(stmt)
 		return result.all()
 
 	@classmethod
@@ -53,25 +48,24 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 	) -> Optional[ModelType]:
 		stmt = sa.select(cls.model).filter_by(**kwargs)
 		result = await db.execute(stmt)
-		return result.scalar_one()
+		result = result.first()
+		return result[0] if result else None
 
 	@classmethod
 	async def get_or_create(
 			cls, db: AsyncSession, obj_in: CreateSchemaType, id_name: str = "id"
 	) -> Tuple[ModelType, bool]:
 		kw = {id_name: getattr(obj_in, id_name)}
-		try:
-			group = await cls.get_by_kwargs(db, **kw)
-			return group, False
-		except NoResultFound:
-			return await cls.create(db, obj_in.copy()), True
+		result = await cls.get_by_kwargs(db, **kw)
+		if result:
+			return result, False
+		return await cls.create(db, obj_in.copy()), True
 
 	@classmethod
 	async def create_list(cls, db: AsyncSession, obj_in: List[CreateSchemaType]) -> List[ModelType]:
 		ret_models = []
 		for obj in obj_in:
-			obj_data = jsonable_encoder(obj, exclude_unset=True)
-			model_obj = cls.model(**obj_data)
+			model_obj = fill_db_obj(obj, cls.model)
 			db.add(model_obj)
 			ret_models.append(model_obj)
 		await db.commit()
@@ -80,12 +74,9 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
 	@classmethod
 	async def create(cls, db: AsyncSession, obj_in: CreateSchemaType) -> ModelType:
-		obj_in_data = jsonable_encoder(obj_in, exclude_unset=True)
-		db_obj = cls.model(**obj_in_data)
-		# InstrumentedAttribute.type
-		db.add(db_obj)
-		await db.commit()
-		await db.refresh(db_obj)  # is it detached?
+		db_obj = fill_db_obj(obj_in, cls.model)
+		# db.add(db_obj)
+		# await db.commit()
 		return db_obj
 
 	@classmethod
@@ -108,7 +99,6 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 			setattr(db_obj, key, value)
 		db.add(db_obj)
 		await db.commit()
-		await db.refresh(db_obj)  # WARNING: is it detached?
 		return db_obj
 
 	@classmethod
@@ -130,7 +120,6 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 				setattr(db_obj, field, update_data[field])
 		db.add(db_obj)
 		await db.commit()
-		await db.refresh(db_obj)  # Is it detached?
 		return db_obj
 
 	@classmethod

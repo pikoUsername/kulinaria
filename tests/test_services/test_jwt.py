@@ -23,14 +23,14 @@ def test_creating_jwt_token() -> None:
     assert parsed_payload["content"] == "payload"
 
 
-def test_creating_token_for_user(test_user: UserInDB) -> None:
+async def test_creating_token_for_user(test_user: UserInDB) -> None:
     token = create_access_token_for_user(user=test_user, secret_key="secret")
     parsed_payload = jwt.decode(token, "secret", algorithms=[ALGORITHM])
 
     assert parsed_payload["username"] == test_user.username
 
 
-def test_retrieving_token_from_user(test_user: UserInDB) -> None:
+async def test_retrieving_token_from_user(test_user: UserInDB) -> None:
     token = create_access_token_for_user(user=test_user, secret_key="secret")
     username = get_username_from_token(token, "secret")
     assert username == test_user.username

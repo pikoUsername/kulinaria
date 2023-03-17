@@ -35,12 +35,12 @@ class GroupsCRUD(BaseCrud[Groups, GroupInDB, GroupInDB]):
 			for name in permission_names:
 				_temp = await PermissionsCrud.get_by_kwargs(db, name=name)
 				if not _temp:
-					raise ValueError(does_not_exists_err.format(_temp.name))
+					raise ValueError(does_not_exists_err.format(name=group_enum.value))
 				perms.append(_temp)
 		else:
-			perms = await PermissionsCrud.get_by_kwargs(db, name=group_enum.value)
+			perms = await PermissionsCrud.get_by_kwargs(db, name=group_enum.value.strip(" "))
 			if not perms:
-				raise ValueError(does_not_exists_err.format(perms.name))
+				raise ValueError(does_not_exists_err.format(name=group_enum.value))
 			perms = [perms]
 
 		perms = convert_list_obj_to_model(perms, PermissionsInDB)

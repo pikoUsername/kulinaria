@@ -1,3 +1,4 @@
+import asyncio
 from os import environ
 
 import sqlalchemy as sa
@@ -65,6 +66,7 @@ def test_user_schema() -> UserInDB:
         email=EmailStr("TestUser@gmail.com"),
     )
 
+
 # garbage
 @pytest.fixture
 def user_password() -> str:
@@ -72,14 +74,14 @@ def user_password() -> str:
 
 
 @pytest.fixture
-async def test_user(db: AsyncSession, test_user_schema: UserInDB, user_pswd: str) -> Users:
+async def test_user(db: AsyncSession, test_user_schema: UserInDB, user_password: str) -> Users:
     test_user_schema = UserInCreate(
         username=test_user_schema.username,
         email=EmailStr(test_user_schema.email),
-        password=user_pswd,
+        password=user_password,
     )
 
-    user, _ = await UserCrud.get_or_create(db, test_user_schema)
+    user, _ = await UserCrud.get_or_create(db, test_user_schema, id_name="username")
     return user
 
 

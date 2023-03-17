@@ -4,7 +4,7 @@ from app.db.repositories.user import UserCrud, Users
 
 
 async def check_email_is_taken(db: AsyncSession, email: str) -> bool:
-	result = await UserCrud.get_by_email(db, Users.email == email)
+	result = await UserCrud.get_by_email(db, email)
 	return bool(result)
 
 

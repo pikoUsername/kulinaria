@@ -72,7 +72,7 @@ async def login(
 		detail=strings.INCORRECT_LOGIN_INPUT,
 	)
 
-	user = await UserCrud.get_by_email(session, Users.email == user_login.email)
+	user = await UserCrud.get_by_email(session, user_login.email)
 
 	if not user:
 		raise wrong_login_error

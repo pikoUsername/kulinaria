@@ -24,7 +24,7 @@ class UserCrud(BaseCrud[Users, UserInCreate, UserInUpdate]):
 	@classmethod
 	async def get_by_email(cls, db: AsyncSession, email: str) -> Optional[Users]:  # noqa
 		result = await db.execute(
-			sa.select(Users).where(Users.c.email == email))
+			sa.select(Users).where(Users.email == email))
 		return result.scalar()
 
 	@classmethod
@@ -57,8 +57,8 @@ class UserCrud(BaseCrud[Users, UserInCreate, UserInUpdate]):
 
 	@classmethod
 	async def create(cls, db: AsyncSession, obj_in: UserInCreate) -> Users:
-		group = await GroupsCRUD.get_by_kwargs(db, name=GlobalGroups.anonymous)
-		perm = await PermissionsCrud.get_by_kwargs(db, name=GlobalPermissions.user_default)
+		group = await GroupsCRUD.get_by_kwargs(db, name=GlobalGroups.default_user.name)
+		perm = await PermissionsCrud.get_by_kwargs(db, name=GlobalPermissions.anonymous.value)
 		user = await super().create_with_relationship(
 			db,
 			obj_in,
