@@ -14,3 +14,11 @@ class TimedModel(BaseModel):
 
 	created_at = sa.Column(sa.DateTime, server_default=sa.func.now())
 	updated_at = sa.Column(sa.DateTime, onupdate=sa.func.now())
+
+
+class TestBaseModel(BaseModel):
+	__abstract__ = True
+
+	def __init__(self, *args, **kwargs):
+		# TODO: Make filler here, not outside!
+		pass

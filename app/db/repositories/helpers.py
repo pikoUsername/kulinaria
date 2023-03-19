@@ -24,3 +24,25 @@ PermissionsToGroups = sa.Table(
 	sa.Column("group_id", sa.ForeignKey("groups.id"), primary_key=True),
 	sa.Column("permission_id", sa.ForeignKey("permissions.id"), primary_key=True),
 )
+
+
+def get_tables():
+	"""
+	Дает все таблицы которые определены в models.py
+
+	Очень тупое, глупое, даже наивное решение
+	Но я не нашел другого пути достать конструктор таблиц
+
+	:return:
+	"""
+	# to avoid circular import
+	from . import models
+
+	models_raw_dict = models.__dict__
+	tables = {}
+
+	for key, value in models_raw_dict.items():
+		if hasattr(value, "__tablename__") and key in models.__all__:
+			tables[value.__tablename__] = value
+
+	return tables

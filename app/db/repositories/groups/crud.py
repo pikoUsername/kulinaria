@@ -43,15 +43,30 @@ class GroupsCRUD(BaseCrud[Groups, GroupInDB, GroupInDB]):
 				raise ValueError(does_not_exists_err.format(name=group_enum.value))
 			perms = [perms]
 
-		perms = convert_list_obj_to_model(perms, PermissionsInDB)
+		converted_perms = convert_list_obj_to_model(perms, PermissionsInDB)
+		del perms
 
 		group_mdl = GroupInDB(
 			name=group_enum.name,
 			users=[],
-			permissions=[*perms],
+			permissions=[*converted_perms],
 		)
+		# group = Groups(
+		# 	name=group_mdl.name,
+		# 	users=[],
+		# 	permissions=perms,
+		# )
+		# if group_ := await GroupsCRUD.get_by_kwargs(db, name=group_mdl.name):
+		# 	return group_, True
+		# db.add(group)
+		# await db.commit()
+		# return group, False
 
-		group, created = await GroupsCRUD.get_or_create(db, group_mdl, id_name="name")
+		group, created = await GroupsCRUD.get_or_create(
+			db,
+			group_mdl,
+			id_name="name",
+		)
 		if created:
 			return group, True
 		return group, False

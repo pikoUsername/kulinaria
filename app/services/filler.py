@@ -1,18 +1,17 @@
-from abc import ABCMeta, abstractmethod
-from typing import Optional, TypeVar, List, Any, Type, ForwardRef, Union
+from abc import abstractmethod
+from typing import TypeVar, List, Any, Type, ForwardRef, Union
 
 import sqlalchemy as sa
 from sqlalchemy.orm.attributes import QueryableAttribute
 from pydantic import BaseModel
 from pydantic.fields import ModelField
 from fastapi.encoders import jsonable_encoder
-from loguru import logger
 
 from .mixins import ContextInstanceMixin
-
+from ..db.repositories.helpers import get_tables
 
 T = TypeVar("T", bound=BaseModel)
-ST = TypeVar("ST", bound=Union[dict, sa.Table])
+ST = TypeVar("ST", bound=Union[dict, Type[sa.Table]])
 FT = TypeVar("FT", bound=ModelField)
 
 
@@ -20,6 +19,7 @@ class ModelsFillerInterface:
 	"""
 	Для совместимости с другими фрейморвками, и простым sql
 	"""
+
 	@abstractmethod
 	def fill(self, model: T, db_obj: ST) -> T:
 		pass
@@ -45,17 +45,14 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 	SubModelsResolver(meta).resolve(model)
 
 	"""
-	def __init__(self, meta: Optional[sa.MetaData] = None) -> None:
-		if meta:
-			self._tables = meta.tables
-		self.meta = meta
-		
-		super(ModelsFiller, self).__init__()
 
-	def configure(self, *args, **kwargs) -> None:
-		meta = kwargs.pop("meta")
-		self.meta = meta
-		self._tables = self._tables
+	def __init__(self) -> None:
+		self._tables = get_tables()
+
+		self.set_current(self)
+
+	def configure(self):
+		pass
 
 	def normalize_model_name(self, name: str) -> str:
 		"""
@@ -123,9 +120,9 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 		"""
 		rel = getattr(db_obj, key, None)
 
-		if not rel:
+		if not hasattr(db_obj, key):
 			raise ValueError(
-				"wrong configuration, key %s is not associated with any column in table" % key
+				"wrong configuration, key '%s' is not associated with any column in table" % key
 			)
 		if not isinstance(rel, QueryableAttribute) or not rel.class_:
 			raise ValueError(
@@ -154,8 +151,11 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 		Предполагается что модель и таблица алхимии АБСОЛЮТНО точные
 
 		:param model:
+		:param db_obj:
 		:return:
 		"""
+		relations = {}
+
 		for key, field in model.__fields__.items():
 			field: ModelField
 			if issubclass(field.type_, BaseModel):
@@ -163,14 +163,24 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 					to_iterate = getattr(model, key)
 					for val in to_iterate:
 						db_rel_f = self._fill_table_data_by_one(db_obj, key, val)
-						getattr(db_obj, key).add(db_rel_f)
+						if not relations.get(key, None):
+							relations[key] = []
+						relations[key].append(db_rel_f)
+					# _getattr_and_set_list_or_append(db_obj, key, db_rel_f)
 					continue
 				db_rel = self._fill_table_data_by_one(db_obj, key, field)
-				getattr(db_obj, key).add(db_rel)
+				relations[key] = db_rel
+
+		data = jsonable_encoder(
+			model,
+			exclude_unset=True,
+			exclude=set(self.detect_sub_models(model))
+		)
+		db_obj = db_obj(**data, **relations)
 
 		return db_obj
 
-	def _fill_table_data_by_one(self, db_obj: sa.Table, key: str, field: Union[T, FT]) -> sa.Table:
+	def _fill_table_data_by_one(self, db_obj: Type[sa.Table], key: str, field: Union[T, FT]) -> sa.Table:
 		"""
 		Field.type_ должен соответствовать BaseModel
 
@@ -187,13 +197,11 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 			typ = type(field)
 
 		table = self.resolve_model_name(typ)
-		logger.info(table)
 		obj_in_data: dict = jsonable_encoder(field, exclude_unset=True)
-		logger.info(type(table))
 		sub_main_obj = table(**obj_in_data)  # noqa
 		assert self.validate_relation(key, db_obj)
 		if self.detect_sub_models(typ):
-			self.fill(field, sub_main_obj)
+			sub_main_obj = self.fill(field, sub_main_obj)
 
 		return sub_main_obj
 
@@ -204,32 +212,49 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 		return db_type(**data)  # noqa
 
 
-def fill_db_obj(model: T, db_obj: Type[ST]) -> ST:
+class _SqlAlchemyDuplicationResolver:
 	"""
-	является фасадом для ModelsFiller
+	Resolves sqlalchemy duplication error. i.e.:
+	sqlalchemy.exc.IntegrityError:
+		(sqlalchemy.dialects.postgresql.asyncpg.IntegrityError) <class 'asyncpg.exceptions.UniqueViolationError'>:
 
-	Использование:
-	db_obj = fill_db_obj(model, cls.table)
-	session.add(db_obj)
-
-	:param model:
-	:param db_obj:
-	:return:
+	That accrues if object is not fetched one.
+	Bounds to ModelsFiller class.
 	"""
+	def __init__(self, filler: ModelsFiller):
+		self._filler = filler
+
+	def resolve(self, db_obj: Type[ST], duplicates: List[str]) -> None:
+		"""
+		This resolve method actually runs some session queries
+		So, count it as another layer that uses Databases,
+		and must be heavily tested
+
+		Of course it gives a LOT of overhead, espacially on user table.
+		But hey, it's just expermintal stuff that i do for myself.
+		Not anyone can understand what's going on
+
+		After that now you can use the create method as shown below:
+		await BaseCrud.create(obj)
+
+		:param db_obj:
+		:param duplicates:
+		:return:
+		"""
+		for duplicate in duplicates:
+			duplicate_rel = getattr(db_obj, duplicate)
+			if duplicate_rel is None:
+				pass
+
+
+def fill(model: T, db_obj: Type[ST]) -> ST:
 	filler = ModelsFiller.get_current()
-	data = jsonable_encoder(
-		model,
-		exclude_unset=True,
-		exclude=set(filler.detect_sub_models(model)),
-	)
-	db_obj = db_obj(**data)
-	return fill(model, db_obj)
 
-
-def fill(model: T, db_obj: ST) -> ST:
-	filler = ModelsFiller.get_current()
-
-	if not filler.meta:
+	if not filler._tables:
 		raise TypeError("Models filler is not initialized properly")
 	return filler.fill(model, db_obj)
 
+
+def detect_sub_models(model: T) -> List[str]:
+	filler = ModelsFiller.get_current()
+	return filler.detect_sub_models(model)

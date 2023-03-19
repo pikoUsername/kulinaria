@@ -6,7 +6,6 @@ from loguru import logger
 from app.core.settings.app import AppSettings
 from app.db.events import close_db_connection, connect_to_db, create_default_permissions, create_default_groups
 from app.services.filler import ModelsFiller
-from app.db.engine import get_meta
 
 
 def create_start_app_handler(
@@ -14,7 +13,7 @@ def create_start_app_handler(
 		settings: AppSettings,
 ) -> Callable:  # type: ignore
 	async def start_app() -> None:
-		app.state.models_filler = ModelsFiller(get_meta())
+		app.state.models_filler = ModelsFiller()
 		ModelsFiller.set_current(app.state.models_filler)
 		await connect_to_db(app, settings)
 		await create_default_permissions(app)

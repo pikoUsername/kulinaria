@@ -13,6 +13,6 @@ if TYPE_CHECKING:
 class Groups(BaseModel):
 	__tablename__ = "groups"
 
-	permissions: Mapped["Permissions"] = relationship(secondary=PermissionsToGroups)  # M:M
+	permissions: Mapped[List["Permissions"]] = relationship(secondary=PermissionsToGroups)  # M:M
 	name = sa.Column(sa.String(125), primary_key=True)
 	users: Mapped[List["Users"]] = relationship(secondary=UserToGroups)  # M:M

@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar, List, Union, Dict, Any, Optional, Tuple, Sequence
+from typing import Generic, TypeVar, List, Union, Dict, Any, Optional, Tuple, Sequence, Type
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
@@ -8,8 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.engine import Result
 
 from app.db.repositories.base import BaseModel as DBBaseModel
-from app.services.filler import fill_db_obj, fill
-
+from app.services.filler import fill, detect_sub_models
 
 ExModelType = TypeVar("ExModelType", bound=DBBaseModel)
 ModelType = TypeVar("ModelType", bound=DBBaseModel)
@@ -26,7 +25,7 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 	Crud.create_with_relationship(CreateSchemaType)
 
 	"""
-	model: sa.Table
+	model: Type[sa.Table]
 
 	@classmethod
 	async def get(cls, db: AsyncSession, id: Any) -> Optional[ModelType]:
@@ -62,10 +61,32 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 		return await cls.create(db, obj_in.copy()), True
 
 	@classmethod
+	async def get_or_create_with_rel(
+			cls,
+			db: AsyncSession,
+			obj_in: CreateSchemaType,
+			id_name: str = "id",
+			additional_opts: Dict[str, Any] = None,
+			**relationships: Union[List[sa.Table], sa.Table],
+	) -> Tuple[ModelType, bool]:
+		kw = {id_name: getattr(obj_in, id_name)}
+		result = await cls.get_by_kwargs(db, **kw)
+
+		if result:
+			return result, False
+
+		return await cls.create_with_relationship(
+			db,
+			obj_in=obj_in.copy(),
+			additional_opts=additional_opts,
+			**relationships
+		), True
+
+	@classmethod
 	async def create_list(cls, db: AsyncSession, obj_in: List[CreateSchemaType]) -> List[ModelType]:
 		ret_models = []
 		for obj in obj_in:
-			model_obj = fill_db_obj(obj, cls.model)
+			model_obj = fill(obj, cls.model)
 			db.add(model_obj)
 			ret_models.append(model_obj)
 		await db.commit()
@@ -74,9 +95,9 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
 	@classmethod
 	async def create(cls, db: AsyncSession, obj_in: CreateSchemaType) -> ModelType:
-		db_obj = fill_db_obj(obj_in, cls.model)
-		# db.add(db_obj)
-		# await db.commit()
+		db_obj = fill(obj_in, cls.model)
+		db.add(db_obj)
+		await db.commit()
 		return db_obj
 
 	@classmethod
@@ -87,15 +108,19 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 			additional_opts: Dict[str, Any] = None,
 			**relationships: Union[List[sa.Table], sa.Table],
 	) -> ModelType:
-		obj_in_data: dict = jsonable_encoder(obj_in, exclude_unset=True)
+		obj_in_data: dict = jsonable_encoder(
+			obj_in,
+			exclude_unset=True,
+			exclude=set(detect_sub_models(obj_in)),
+		)
 		if additional_opts:
 			obj_in_data.update(**additional_opts)
 		db_obj = cls.model(**obj_in_data)
 		for key, value in relationships.items():
-			if isinstance(value, list):
+			if isinstance(value, (list, tuple, set)):
 				rel = getattr(db_obj, key)
 				for val in value:
-					rel.add(val)
+					rel.append(val)
 			setattr(db_obj, key, value)
 		db.add(db_obj)
 		await db.commit()

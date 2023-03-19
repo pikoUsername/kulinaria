@@ -1,4 +1,5 @@
-from pydantic import BaseConfig, BaseModel
+from pydantic import BaseConfig, BaseModel, validator
+from sqlalchemy.orm import Query
 
 
 class RWModel(BaseModel):
@@ -9,6 +10,12 @@ class RWModel(BaseModel):
 		s = cls.__name__.lower()
 		s = s.strip("indb")
 		return s.capitalize()
+
+	@validator("*", pre=True)
+	def evaluate_lazy_columns(cls, v):
+		if isinstance(v, Query):
+			return v.all()
+		return v
 
 	class Config(BaseConfig):
 		orm_mode = True

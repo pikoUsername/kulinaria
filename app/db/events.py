@@ -16,6 +16,7 @@ async def connect_to_db(app: FastAPI, settings: AppSettings) -> None:
 	engine = create_async_engine(settings.database_url)
 	Session.configure(bind=engine)
 	current_session.configure(bind=engine)
+
 	async with engine.begin() as conn:
 		await conn.run_sync(Meta.create_all)
 
@@ -31,6 +32,19 @@ async def close_db_connection(app: FastAPI) -> None:
 	await app.state.engine.dispose()
 
 	logger.info("Connection closed")
+
+
+async def create_acl_base(app: FastAPI) -> None:
+	async with app.state.session() as session:
+		async with session.begin():
+			perms = {}
+			for group in GlobalGroups:
+				perm = GlobalGroups(group.value)
+				perm_mdl = PubPermissions(
+					name=perm.name,
+					code=perm.value,
+				)
+				perms[group.value] = await PermissionsCrud.get_or_create(session, perm_mdl, id_name="name")
 
 
 async def create_default_permissions(app: FastAPI) -> None:
