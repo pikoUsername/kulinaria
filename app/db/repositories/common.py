@@ -111,7 +111,7 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 		obj_in_data: dict = jsonable_encoder(
 			obj_in,
 			exclude_unset=True,
-			exclude=set(detect_sub_models(obj_in)),
+			exclude=set(relationships.keys()),
 		)
 		if additional_opts:
 			obj_in_data.update(**additional_opts)
@@ -121,6 +121,7 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 				rel = getattr(db_obj, key)
 				for val in value:
 					rel.append(val)
+				continue
 			setattr(db_obj, key, value)
 		db.add(db_obj)
 		await db.commit()

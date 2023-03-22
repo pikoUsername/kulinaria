@@ -50,7 +50,6 @@ async def create_product(
 @router.get(
 	"/{product_id}",
 	name="products:get-product",
-	dependencies=[Depends(CheckPermission("read", Products))]
 )
 async def get_product(
 		product_id: int,
@@ -59,7 +58,7 @@ async def get_product(
 	product = await ProductsCRUD.get(db, product_id)
 	if not product:
 		raise HTTPException(
-			detail=strings.DOES_NOT_EXISTS.format(model=Products.__tablename__),
+			detail=strings.DOES_NOT_EXISTS.format(model=Products.__tablename__, id=product_id),
 			status_code=400,
 		)
 

@@ -63,7 +63,6 @@ class UserCrud(BaseCrud[Users, UserInCreate, UserInUpdate]):
 			db,
 			obj_in,
 			groups=[group],
-			seller=[],
 			permission=perm,
 			product_lists=[],
 		)

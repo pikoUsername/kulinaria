@@ -34,8 +34,8 @@ class Users(BaseModel):
 	address = sa.Column(sa.String(256))
 	encrypted_password = sa.Column(sa.String(300), nullable=False)
 	salt = sa.Column(sa.String(256), nullable=False)
-	permission_id: Mapped[int] = mapped_column(sa.ForeignKey('permissions.id'))
-	permission: Mapped["Permissions"] = relationship(uselist=False)  # one to one
+	permission_id: Mapped[int] = mapped_column(sa.ForeignKey('permissions.id'), nullable=False)
+	permission: Mapped["Permissions"] = relationship(uselist=True)  # one to one
 	groups: Mapped[List["Groups"]] = relationship(back_populates="users", secondary=UserToGroups)  # M:M
 	seller_id: Mapped[Optional[int]] = mapped_column(sa.ForeignKey("sellers.id"))
 	seller: Mapped[Optional["Seller"]] = relationship(uselist=False, foreign_keys="Seller.user_id")  # 1:1
