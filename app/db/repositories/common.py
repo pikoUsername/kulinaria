@@ -124,7 +124,7 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 				continue
 			setattr(db_obj, key, value)
 		db.add(db_obj)
-		await db.commit()
+		# await db.commit()
 		return db_obj
 
 	@classmethod

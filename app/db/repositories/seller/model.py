@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 class Seller(TimedModel):
 	"""
-	Seller is linked to user model by one by one relationship
+	Seller is linked to user model by one relationship
 	"""
 	__tablename__ = 'sellers'
 

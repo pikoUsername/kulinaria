@@ -34,19 +34,6 @@ async def close_db_connection(app: FastAPI) -> None:
 	logger.info("Connection closed")
 
 
-async def create_acl_base(app: FastAPI) -> None:
-	async with app.state.session() as session:
-		async with session.begin():
-			perms = {}
-			for group in GlobalGroups:
-				perm = GlobalGroups(group.value)
-				perm_mdl = PubPermissions(
-					name=perm.name,
-					code=perm.value,
-				)
-				perms[group.value] = await PermissionsCrud.get_or_create(session, perm_mdl, id_name="name")
-
-
 async def create_default_permissions(app: FastAPI) -> None:
 	logger.info("Creating default permissions...")
 	# horrible mess...
@@ -74,6 +61,6 @@ async def create_default_groups(app: FastAPI) -> None:
 	async with app.state.session() as session:
 		async with session.begin():
 			for group in GlobalGroups:
-				_, created = await GroupsCRUD.create_default(session, group)
+				gr, created = await GroupsCRUD.create_default(session, group)
 				if created:
-					logger.info(f"Group {group.name} created")
+					logger.info(f"Group {group.name} created", extra={"groups": gr})

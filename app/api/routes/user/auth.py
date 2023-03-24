@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Body, HTTPException
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_201_CREATED
 

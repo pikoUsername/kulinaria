@@ -19,7 +19,7 @@ from app.db.repositories.user import Users
 from app.db.repositories.wallet import Wallet
 
 # Helper file for alembic
-# NOTE: Dont import from anywhere in application to this file directly
+# NOTE: Don't import from anywhere in application to this file directly
 # to get tables use app.db.repositories.helpers.get_tables
 
 __all__ = (

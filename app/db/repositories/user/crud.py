@@ -58,7 +58,7 @@ class UserCrud(BaseCrud[Users, UserInCreate, UserInUpdate]):
 	@classmethod
 	async def create(cls, db: AsyncSession, obj_in: UserInCreate) -> Users:
 		group = await GroupsCRUD.get_by_kwargs(db, name=GlobalGroups.default_user.name)
-		perm = await PermissionsCrud.get_by_kwargs(db, name=GlobalPermissions.anonymous.value)
+		perm = await PermissionsCrud.get_by_kwargs(db, name=GlobalPermissions.anonymous.name)
 		user = await super().create_with_relationship(
 			db,
 			obj_in,

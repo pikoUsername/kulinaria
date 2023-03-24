@@ -2,7 +2,7 @@ import logging
 import sys
 from typing import Any, Dict, List, Tuple
 
-from loguru import logger, _logger
+from loguru import logger
 from pydantic import PostgresDsn, SecretStr
 
 from app.core.logging import InterceptHandler
@@ -58,4 +58,9 @@ class AppSettings(BaseAppSettings):
 			logging_logger = logging.getLogger(logger_name)
 			logging_logger.handlers = [InterceptHandler(level=self.logging_level)]
 
-		logger.configure(handlers=[{"sink": sys.stderr, "level": self.logging_level}])
+		logger.configure(
+			handlers=[
+				dict(sink=sys.stderr, level=self.logging_level),
+				dict(sink="logs/log_{time}.log", enqueue=True, serialize=True),
+			],
+		)
