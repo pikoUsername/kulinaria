@@ -230,12 +230,14 @@ class _SqlAlchemyDuplicationResolver:
 		So, count it as another layer that uses Databases,
 		and must be heavily tested
 
-		Of course it gives a LOT of overhead, espacially on user table.
+		Of course, it gives a LOT of overhead, espacially on user table.
 		But hey, it's just expermintal stuff that i do for myself.
 		Not anyone can understand what's going on
 
 		After that now you can use the create method as shown below:
 		await BaseCrud.create(obj)
+
+		TODO!
 
 		:param db_obj:
 		:param duplicates:

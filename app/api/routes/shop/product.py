@@ -138,3 +138,13 @@ async def rate(
 		db: AsyncSession = Depends(get_connection),
 ) -> BoolResponse:
 	product = await ProductsCRUD.get(db, product_id)
+
+
+	await ProductsCRUD.update(
+		db,
+
+	)
+
+	return BoolResponse(
+		ok=True,
+	)

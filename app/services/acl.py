@@ -9,9 +9,10 @@ from app.db.repositories.groups import GroupsCRUD
 from app.db.repositories.permissions import PermissionsCrud
 from app.models.domain import Permissions as DomainPermission, Groups
 from app.db.repositories.control import CONTROL_LIST
+from app.db.engine import get_meta
 
 
-def read_acl_file(file: str):
+def create_acl(file: str, session: AsyncSession) -> None:
     """
     Этот сервис(да я ебал) запускается перед запуском основного приложения
     И её цель это чтение acl_file-а и сериализации их в Permissions, и Groups моделек
@@ -19,13 +20,19 @@ def read_acl_file(file: str):
     и пермишшины в базу данных.
 
     дополнение acl_file-a является json
+
+    Остутвуют тесты! Не используйте пока что
     """
     with open(file, "r", encoding="utf8") as f:
         data = json.load(f)
 
-
-def create_acl(file: str) -> None:
-    pass
+    logger.info("Creating ACL objects...")
+    meta = get_meta()
+    tables = meta.sorted_tables
+    tables = [table.name for table in tables]
+    dto = _AclValidator(data, tables).validate()
+    executor = _AclExecutor(session)
+    await executor.execute(dto)
 
 
 class AclDecodeError(Exception):
@@ -125,7 +132,7 @@ class _AclExecutor:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    def execute(self, data: _AclData) -> None:
+    async def execute(self, data: _AclData) -> None:
         """
         Кладет все данные в data в базу данных
         """
@@ -152,7 +159,7 @@ class _AclExecutor:
                 )
                 if created:
                     logger.info(f"Group {group.name} has been created")
-        except:
+        except Exception:
             if tx:
                 await tx.rollback()
             raise

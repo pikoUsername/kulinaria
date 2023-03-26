@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.engine import Result
 
 from app.db.repositories.base import BaseModel as DBBaseModel
-from app.services.filler import fill, detect_sub_models
+from app.services.filler import fill
 
 ExModelType = TypeVar("ExModelType", bound=DBBaseModel)
 ModelType = TypeVar("ModelType", bound=DBBaseModel)
@@ -39,7 +39,7 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 	) -> Optional[Sequence[ModelType]]:
 		stmt = sa.select(cls.model).filter_by(**{key: x for x in values})
 		result: Result = await db.execute(stmt)
-		return result.all()
+		return result.all()  # noqa
 
 	@classmethod
 	async def get_by_kwargs(

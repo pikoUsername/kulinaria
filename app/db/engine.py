@@ -4,6 +4,9 @@ from sqlalchemy import MetaData
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session, async_sessionmaker
 
+
+__all__ = "get_db", "get_meta"
+
 # here will be some global variables,
 # not intended to be used in routes, use dependencies instead.
 Meta = MetaData()
