@@ -20,8 +20,7 @@ class ProductInResponse(RWSchema):
 
 class ProductInCreate(RWSchema):
 	name: str
-	seller: SellerInDB
-	seller_id: SellerInDB
+	seller_id: int
 	tags: List[TagsInDB]
 	description: str
 

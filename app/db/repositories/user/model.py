@@ -35,8 +35,12 @@ class Users(BaseModel):
 	encrypted_password = sa.Column(sa.String(300), nullable=False)
 	salt = sa.Column(sa.String(256), nullable=False)
 	permission_id: Mapped[int] = mapped_column(sa.ForeignKey('permissions.id'), nullable=False)
-	permission: Mapped["Permissions"] = relationship()  # one to one
-	groups: Mapped[List["Groups"]] = relationship(back_populates="users", secondary=UserToGroups)  # M:M
+	permission: Mapped["Permissions"] = relationship(lazy='selectin')  # one to one
+	groups: Mapped[List["Groups"]] = relationship(
+		back_populates="users",
+		secondary=UserToGroups,
+		lazy='selectin',
+	)  # M:M
 	seller_id: Mapped[Optional[int]] = mapped_column(sa.ForeignKey("sellers.id"))
 	seller: Mapped[Optional["Seller"]] = relationship(uselist=False, foreign_keys="Seller.user_id")  # 1:1
 	is_deactivated: Mapped[Optional[bool]] = mapped_column()
@@ -79,24 +83,28 @@ class Users(BaseModel):
 
 	def get_group_perms(self) -> Set[str]:
 		result: Set[str] = set()
+		# i don't know how it will affect performance
 		for group in self.groups:
 			for perm in group.permissions:
-				result.add(perm.code.split())
+				perms = perm.code.split()
+				if perms:
+					result.add(*perms)
 
 		return result
 
 	def get_permissions(self) -> Set[str]:
 		result = set()
 
-		for perm in self.permissions:
-			result.add(perm.code.split())
+		perms = self.permission.code.split()
+		if perms:
+			result.add(*perms)
 
 		return result
 
 	def get_all_permissions(self) -> Set[str]:
 		return {
 			*self.get_group_perms(),
-			*self.get_permission(),
+			*self.get_permissions(),
 		}
 
 	def check_permissions(self, code: str) -> bool:

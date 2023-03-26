@@ -1,17 +1,18 @@
 import enum
 from typing import Tuple
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.repositories.common import BaseCrud
-from app.models.domain import GroupInDB, PermissionsInDB
+from app.models.domain import GroupInDB, Groups as DomainGroups
 from app.db.repositories.permissions import PermissionsCrud
-from app.services.utils import convert_list_obj_to_model
 
 from .model import Groups
+from ..user import Users
 
 
-class GroupsCRUD(BaseCrud[Groups, GroupInDB, GroupInDB]):
+class GroupsCRUD(BaseCrud[Groups, DomainGroups, GroupInDB]):
 	model = Groups
 
 	@classmethod
@@ -49,3 +50,14 @@ class GroupsCRUD(BaseCrud[Groups, GroupInDB, GroupInDB]):
 		)
 
 		return await GroupsCRUD.get_or_create_with_rel(db, group_mdl, permissions=perms, id_name="name")
+
+	@classmethod
+	async def get_any_group_by_name(
+		cls,
+		db: AsyncSession,
+		user: Users,
+		group_name: str
+	) -> Groups:  # it's very bad design
+		stmt = select(Users).where(user.groups.any(Groups.name == group_name))
+		group = await db.scalar(stmt)
+		return group

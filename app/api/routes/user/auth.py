@@ -78,7 +78,7 @@ async def login(
 	if not user:
 		raise wrong_login_error
 
-	if user.check_password(user_login.password):
+	if not user.verify_password(user_login.password):
 		raise wrong_login_error
 
 	token = jwt.create_access_token_for_user(
@@ -91,6 +91,6 @@ async def login(
 			token=token,
 			username=user.username,
 			email=user.email,
-			image=user.image,
+			image=user.image_url,
 		),
 	)

@@ -18,13 +18,13 @@ if TYPE_CHECKING:
 class User(RWModel):
 	username: str
 	email: str
-	bio: str = ""
+	bio: Optional[str] = ""
 	image: Optional[str] = None
 	lastname: Optional[str] = ""
 	address: Optional[str] = ""
 	is_deactivated: bool = False
 	product_lists: List[ProductListInDB] = []
-	phone_number: str = ""
+	phone_number: Optional[str] = ""
 	is_stuff: bool = False
 	last_online: datetime = Field(default_factory=datetime.now)
 

@@ -14,7 +14,7 @@ from .model import Users
 
 __all__ = "UserCrud",
 
-from ..groups import GroupsCRUD
+from ..groups import GroupsCRUD, Groups
 from ..permissions import PermissionsCrud
 
 

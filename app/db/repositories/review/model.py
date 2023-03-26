@@ -19,6 +19,7 @@ class Reviews(TimedModel):
 	rating = sa.Column(sa.Integer)
 	is_hidden = sa.Column(sa.Boolean, default=False)
 	content = sa.Column(sa.String(256), nullable=False)
+	product_id: Mapped[int] = mapped_column(sa.ForeignKey('products.id', ondelete="CASCADE"))
 	likes: Mapped[int] = mapped_column(default=0)
 	author_id: Mapped[int] = mapped_column(sa.ForeignKey("users.id", ondelete="SET NULL"))
 	author: Mapped["Users"] = relationship()  # M:1

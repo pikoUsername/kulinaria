@@ -36,5 +36,5 @@ def extract_default_value_from_db_obj(db_obj: ST) -> Dict[str, Any]:
 
 
 def remove_default_values_db_obj(db_obj: T) -> T:
-	return db_obj.copy(exclude=["id", "created_at", "updated_at"])
+	return db_obj.copy(exclude={"id", "created_at", "updated_at"})
 
