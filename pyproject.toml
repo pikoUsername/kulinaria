@@ -6,7 +6,7 @@ authors = ["Nik Sidnev <sidnev.nick@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8.1"
 uvicorn = "^0.17.4"
 fastapi = "^0.92.0"
 pydantic = { version = "^1.8", extras = ["email", "dotenv"] }
