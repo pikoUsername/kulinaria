@@ -55,6 +55,7 @@ jobs:
         env:
           SECRET_KEY: secret_key
           DATABASE_URL: postgresql://postgres:postgres@localhost/postgres
+          REDIS_PASSWORD: None
         run: |
           poetry run alembic upgrade head
           poetry run ./scripts/test
