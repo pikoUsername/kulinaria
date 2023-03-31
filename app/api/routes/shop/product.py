@@ -5,10 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies.database import get_connection
 from app.api.dependencies.permissions import CheckPermission
 from app.db.repositories.product import ProductsCRUD, Products
+from app.db.repositories.review import ReviewCrud
 from app.db.repositories.seller import SellerCRUD
-from app.models.domain import SellerInDB, TextEntitiesInDB
+from app.models.domain import SellerInDB, TextEntitiesInDB, ReviewInDB
 from app.models.schemas.base import BoolResponse
 from app.models.schemas.product import ProductInResponse, ProductInCreate, ProductInUpdate
+from app.models.schemas.review import ReviewInCreate
 from app.services.text_entities import Parser
 from app.db.repositories.text_entities import TextEntitiesCRUD
 from app.resources import strings
@@ -129,21 +131,28 @@ async def delete_product(
 
 
 @router.post(
-	"/{product_id}/rate",
+	"/{product_id}/review",
 	name="products:rate",
 	dependencies=[],
 )
-async def rate(
+async def review_product(
 		product_id: int,
+		review: ReviewInCreate = Body(..., embed=True),
 		db: AsyncSession = Depends(get_connection),
 ) -> BoolResponse:
 	product = await ProductsCRUD.get(db, product_id)
 
+	if not product:
+		raise HTTPException(
+			detail=strings.DOES_NOT_EXISTS.format(
+				model=Products.__tablename__,
+				id=product_id
+			),
+			status_code=400,
+		)
 
-	await ProductsCRUD.update(
-		db,
-
-	)
+	review = await ReviewCrud.create(db, review)
+	await ProductsCRUD.add_reviews(db, product, review)
 
 	return BoolResponse(
 		ok=True,

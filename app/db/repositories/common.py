@@ -35,7 +35,7 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
 	@classmethod
 	async def get_by_values(
-			cls, db: AsyncSession, values: list[Any], key: str = "id"
+			cls, db: AsyncSession, values: List[Any], key: str = "id"
 	) -> Optional[Sequence[ModelType]]:
 		stmt = sa.select(cls.model).filter_by(**{key: x for x in values})
 		result: Result = await db.execute(stmt)
@@ -124,7 +124,7 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 				continue
 			setattr(db_obj, key, value)
 		db.add(db_obj)
-		# await db.commit()
+		await db.commit()
 		return db_obj
 
 	@classmethod
@@ -141,9 +141,9 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 			update_data = obj_in
 		else:
 			update_data = obj_in.dict(exclude_unset=True)
-		for field in obj_data:
-			if field in update_data:
-				setattr(db_obj, field, update_data[field])
+		for key, field in obj_data.items():
+			if key in update_data:
+				setattr(db_obj, key, field)
 		db.add(db_obj)
 		await db.commit()
 		return db_obj

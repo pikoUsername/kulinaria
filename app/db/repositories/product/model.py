@@ -1,4 +1,4 @@
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Optional
 
 import sqlalchemy as sa
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -18,8 +18,8 @@ class Products(TimedModel):
 	seller_id: Mapped[int] = mapped_column(sa.ForeignKey("sellers.id", ondelete="CASCADE"))
 	comments: Mapped[List["Comments"]] = relationship()  # 1:many
 	tags: Mapped[List["ProductTags"]] = relationship()  # 1:many
-	reviews: Mapped[List["Reviews"]] = relationship()  # 1:many
-	watches = sa.Column(sa.Integer)
+	reviews: Mapped[Optional[List["Reviews"]]] = relationship()  # 1:many
+	watches = sa.Column(sa.Integer, default=0)
 	description = sa.Column(sa.Text)
 	text_entities: Mapped[List["TextEntityProduct"]] = relationship()  # 1:many for text
 	is_hidden = sa.Column(sa.Boolean, default=False)

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from .rwschema import RWSchema
 
@@ -6,6 +6,7 @@ from app.models.domain import CommentInDB
 from app.models.domain import SellerInDB
 from app.models.domain import TagsInDB
 from app.models.domain import TextEntitiesInDB
+from app.models.domain import ReviewInDB
 
 
 class ProductInResponse(RWSchema):
@@ -26,6 +27,10 @@ class ProductInCreate(RWSchema):
 
 
 class ProductInUpdate(RWSchema):
-	name: str
-	description: str
+	name: Optional[str] = None
+	description: Optional[str] = None
 	tags: List[TagsInDB] = []
+	reviews: List[ReviewInDB] = []
+	text_entities: List[TextEntitiesInDB] = []
+	comments: List[CommentInDB] = []
+	is_hidden: Optional[bool] = None
