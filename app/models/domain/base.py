@@ -6,11 +6,11 @@ from pydantic import Field, BaseModel
 from app.models.common import IDModelMixin, DateTimeModelMixin
 
 from app.models.domain.text_entities import TextEntitiesInDB
-from app.models.domain.users import UserInDB
+# from app.models.domain.users import User
 
 
 class CommentSection(IDModelMixin, DateTimeModelMixin):
-	author: UserInDB
+	# author: User
 	author_id: int
 	content: str = Field(max_length=256)
 	text_entities: List[TextEntitiesInDB] = []

@@ -1,14 +1,20 @@
+from typing import List, cast
+
 from fastapi import APIRouter, Depends, Body, HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.database import get_connection
 from app.api.dependencies.permissions import CheckPermission
+from app.db.repositories.comments import CommentsCRUD
 from app.db.repositories.product import ProductsCRUD, Products
+from app.api.dependencies.authentication import get_current_user_authorizer
 from app.db.repositories.review import ReviewCrud
 from app.db.repositories.seller import SellerCRUD
-from app.models.domain import SellerInDB, TextEntitiesInDB, ReviewInDB
+from app.db.repositories.user import Users
+from app.models.domain import SellerInDB, TextEntitiesInDB, CommentInDB
 from app.models.schemas.base import BoolResponse
+from app.models.schemas.comment import CommentInCreate, CommentInResponse
 from app.models.schemas.product import ProductInResponse, ProductInCreate, ProductInUpdate
 from app.models.schemas.review import ReviewInCreate
 from app.services.text_entities import Parser
@@ -132,13 +138,14 @@ async def delete_product(
 
 @router.post(
 	"/{product_id}/review",
-	name="products:rate",
-	dependencies=[],
+	name="products:review",
 )
 async def review_product(
 		product_id: int,
 		review: ReviewInCreate = Body(..., embed=True),
 		db: AsyncSession = Depends(get_connection),
+		user: Users = Depends(
+			get_current_user_authorizer(required=True)),  # this way you don't let anonymous users left reviews
 ) -> BoolResponse:
 	product = await ProductsCRUD.get(db, product_id)
 
@@ -157,3 +164,57 @@ async def review_product(
 	return BoolResponse(
 		ok=True,
 	)
+
+
+@router.post(
+	"/{product_id}/comment",
+	name="products:comment",
+)
+async def add_comment(
+		product_id: int,
+		comment: CommentInCreate = Body(..., embed=True),
+		db: AsyncSession = Depends(get_connection),
+		user: Users = Depends(
+			get_current_user_authorizer(required=True)),  # this way you don't let anonymous users left comments
+) -> BoolResponse:
+	product = await ProductsCRUD.get(db, product_id)
+
+	if not product:
+		raise HTTPException(
+			detail=strings.DOES_NOT_EXISTS.format(
+				model=Products.__tablename__,
+				id=product_id
+			),
+			status_code=400,
+		)
+
+	comment = await CommentsCRUD.create(db, comment)
+	await ProductsCRUD.add_comments(db, product, comment)
+
+	return BoolResponse(
+		ok=True,
+	)
+
+
+@router.get(
+	"/{product_id}/comments",
+	name="products:get-comments",
+)
+async def get_comments(
+		product_id: int,
+		db: AsyncSession = Depends(get_connection),
+) -> List[CommentInResponse]:
+	product = await ProductsCRUD.get(db, product_id)
+
+	if not product:
+		raise HTTPException(
+			detail=strings.DOES_NOT_EXISTS.format(
+				model=Products.__tablename__,
+				id=product_id
+			),
+			status_code=400,
+		)
+
+	comments = convert_list_obj_to_model(product.comments, CommentInResponse)
+
+	return comments

@@ -12,7 +12,7 @@ def convert_db_obj_to_model(db_obj: ST, model: Type[T]) -> T:
 	return model.from_orm(db_obj)
 
 
-def convert_list_obj_to_model(objects: List[ST], model: Type[T]) -> Iterable[T]:
+def convert_list_obj_to_model(objects: List[ST], model: Type[T]) -> List[T]:
 	models = []
 
 	for obj in objects:
