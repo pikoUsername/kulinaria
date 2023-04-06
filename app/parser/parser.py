@@ -8,9 +8,6 @@ from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 from pydantic import BaseModel
 
-from app.core.config import get_app_settings
-from app.core.settings.app import AppSettings
-
 
 TEST_PARSING_URLS = {
     "phone": "https://kz.e-katalog.com/list/122/",
@@ -26,7 +23,8 @@ class SellerData(BaseModel):
     link: str
     description: str
     price: int
-    color: str
+    color: Optional[str] = None
+    img_url: str
 
 
 class ProductData(BaseModel):
@@ -42,14 +40,12 @@ class ProductData(BaseModel):
 class Parser:
     def __init__(
             self,
-            settings: AppSettings,
             file: str,
             loop: Optional[AbstractEventLoop] = None,
             urls: Dict[str, str] = None,
     ) -> None:
         if urls is None:
             urls = TEST_PARSING_URLS
-        self.settings = settings
         self.loop = loop
         self.urls = urls
         self.file = file
@@ -72,7 +68,7 @@ class Parser:
         # надо попробывать ввести limit
         # настраевыемость, читабельность, и разделение на этапы
         # так как такой код никуда не пойдет
-        for url in urls:
+        for url in urls.values():
             if not url.endswith("/"):
                 url += "/"
             # это первая страница
@@ -92,14 +88,16 @@ class Parser:
 
         return result
 
-    def write_data(self, data: List[ProductData]) -> None:
+    def write_file(self, data: List[ProductData], file: Optional[str] = None) -> None:
+        if file is None:
+            file = self.file
         row_meta = ProductData.__fields__.keys()
-        with open(self.file, "w", newline='') as file:
+        with open(file, "w", newline='') as file:
             writer = csv.writer(file)
             writer.writerow(row_meta)
             for value in data:
                 # нужно тестирование
-                writer.writerow(value)
+                writer.writerow(value.dict().values())
 
     def extract_pages_count(self, content: str) -> int:
         # короче у них ебнутая система
@@ -141,7 +139,7 @@ class Parser:
         sellers = self.get_sellers(prices)
 
         catalog_path = parser.find("div", class_="catalog-path s-width").find_all("a")
-        category = catalog_path[-2]
+        category = catalog_path[-2].get_text()
 
         return ProductData(
             name=name,
@@ -153,16 +151,75 @@ class Parser:
         )
 
     def get_sellers(self, content: str) -> List[SellerData]:
-        pass
+        parser = BeautifulSoup(content, "html.parser")
+
+        seller_table = parser.find('div', class_="where-buy-table").find("tbody")
+        sellers = seller_table.select('tr[class]')
+        result = []
+        for seller in sellers:
+            name = seller.find(class_='where-buy-description').find('h3').get_text()
+            price_td = seller.find(class_='where-buy-price')
+            link = price_td.a['href']
+            price = price_td.get_text().replace(' ', '')
+            img = seller.find(class_='where-buy-img').find(class_='hide-blacked').find('img')['src']
+            color_elem = seller_table.find(class_='where-buy-color')
+            color = None
+            if color_elem:
+                bg_color = color_elem.find('div')['style']
+                color = self.get_color_from_style_string(bg_color)
+
+            desc = seller.find(class_='where-buy-description').find('it-desc').get_text()
+
+            sell = SellerData(
+                name=name,
+                link=link,
+                price=price,
+                img_url=img,
+                color=color,
+                description=desc
+            )
+            result.append(sell)
+        return result
+
+    def get_color_from_style_string(self, color: str) -> str:
+        """Format: background-color: #ffffff"""
+        styles = color.split('\n')
+        for style in styles:
+            if 'background-color' in style:
+                _, color = style.split(":")
+                return color
 
     def get_product_links(self, content: str) -> List[str]:
         parser = BeautifulSoup(content, "html.parser")
         products = parser.find('form', id='list_form1').select('div[id]')
+        links = []
         for product in products:
-            pass 
+            # да
+            link = product.find('div', class_='model-short-info').find('table').find('a')['href']
+            links.append(link)
+        return links
 
 
-def run_parser():
+class ParserRunner:
+    def __init__(self, parser: Parser, settings) -> None:
+        self.parser = parser
+
+    async def run(self):
+        pass
+
+
+def parse_data(urls: Dict[str, str], file: str) -> None:
+    """
+    Парсится дата с е-каталога
+    """
+    loop = asyncio.get_event_loop()
+
+    parser = Parser(file, urls=urls)
+    data = loop.run_until_complete(parser.get_data())
+    parser.write_file(data)
+
+
+def run_parser(file: str):
     """
     Раннится с помощью крона в ночь
     Потом выгружает в ночь в csv формат.
@@ -179,8 +236,11 @@ def run_parser():
     две сессии которые будут записывать в одну бд
     3) будут использваны модули core, и db.
     """
-    settings = get_app_settings()
-    runner = Parser(settings, "./assets/db.csv", urls=TEST_PARSING_URLS)
+    from app.core.settings import get_app_settings
+
+    parser = Parser(file, urls=TEST_PARSING_URLS)
+
+    runner = ParserRunner(parser, get_app_settings())
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(runner.run())
