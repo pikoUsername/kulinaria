@@ -4,6 +4,7 @@ from typing import Optional, List, Dict
 import csv
 
 from aiohttp import ClientSession
+from loguru import logger
 
 from bs4 import BeautifulSoup
 from pydantic import BaseModel
@@ -54,12 +55,15 @@ class Parser:
 
         self.client = ClientSession(loop=loop)
 
+        self.parent_url = "https://kz.e-katalog.com/"
+
     async def get_data(self, urls: List[str] = None) -> List[ProductData]:
         """
         Короче сваливается ВСЕ в одну свалку и кидается потом на CSV
         """
         if urls is None:
             urls = self.urls
+        logger.info(f"Urls: {urls}")
         # сперва собирается ссылки на товары!
         # потом после сборов открываются все эти товары
         # и отправляются в csv
@@ -74,6 +78,7 @@ class Parser:
             # это первая страница
             content = await (await self.client.get(url)).text()
             count = self.extract_pages_count(content)
+            logger.info(f"Pages count: {count}")
             for i in range(count):
                 content = await (await self.client.get(url + f"{i}/")).text()
                 # она будет заниматся и переходом на другие страницы
@@ -81,7 +86,8 @@ class Parser:
                 result_list = []
                 # боже, тройной for!
                 for sub_url in urls:
-                    content = await (await self.client.get(sub_url)).text()
+                    logger.info(f"Parsing data url of: {sub_url}")
+                    content = await (await self.client.get(self.parent_url + sub_url)).text()
                     result_ = await self.extract_detailed_info_from_page(content)
                     result_list.append(result_)
                 result.extend(result_list)
@@ -105,7 +111,9 @@ class Parser:
         # начинается с /0 и потом 3 это /2. Идиотия(((
         parser = BeautifulSoup(content, "html.parser")
 
-        result = parser.select("ib page-num > ib")
+        result = parser.find(class_="ib page-num")
+        result = result.find_all("a")
+
         result = len(result)
 
         return result
@@ -114,11 +122,20 @@ class Parser:
         parser = BeautifulSoup(content, "html.parser")
 
         # sub_type_ = parser.find(class_="t2 no-mobile ib h1")
-        name = parser.find('h1', iterprop="name", class_="t2 no-mobile ib").get_text()
-        full_desc = parser.find(class_='desc-ai-title', iterprop='description')
-        short_desc = full_desc.find_all("p")[0].get_text()
-        short_desc_first_letter = full_desc.find("span", class_="desc-ai-initcap").get_text()
-        short_desc = short_desc_first_letter + short_desc
+        name = parser.find('h1', itemprop="name")
+        name = name.get_text()
+        logger.info(f"Product name: {name}")
+        full_desc = parser.find(class_='desc-ai-title', itemprop='description')
+        short_desc = None
+        if full_desc:
+            if full_desc:
+                logger.info(full_desc)
+                short_desc = full_desc.find_all("p")[0].get_text()
+            short_desc_first_letter = full_desc.find("span", class_="desc-ai-initcap")
+            if short_desc_first_letter:
+                short_desc_first_letter = short_desc_first_letter.get_text()
+            if short_desc and short_desc_first_letter:
+                short_desc = short_desc_first_letter + short_desc
 
         tags_div = parser.find("div", class_="m-c-f1")
         tags_raw = tags_div.find_all("a", class_="ib no-u")
@@ -129,12 +146,14 @@ class Parser:
         charc_raw = parser.find("div", class_="m-c-f2")
         charc_list = []
         for charc in charc_raw.find_all("div"):
-            charc.append(charc['title'])
+            title = charc.get('title')
+            if title:
+                charc.append(title)
         characteristics = SEPARATOR.join(charc_list)
-        url_seller = parser.find("desc-menu").find_all("a")[0]
-        url_seller = url_seller['href']
+        url_seller = parser.find(class_="desc-menu").find_all("a")[0]
+        url_seller = url_seller['link']
 
-        prices = await (await self.client.get(url_seller)).text()
+        prices = await (await self.client.get(self.parent_url + url_seller)).text()
 
         sellers = self.get_sellers(prices)
 
@@ -144,7 +163,7 @@ class Parser:
         return ProductData(
             name=name,
             category=category,
-            short_description=short_desc,
+            short_description=short_desc or None ,
             characteristics=characteristics,
             tags=tags,
             sellers=sellers,
@@ -153,7 +172,7 @@ class Parser:
     def get_sellers(self, content: str) -> List[SellerData]:
         parser = BeautifulSoup(content, "html.parser")
 
-        seller_table = parser.find('div', class_="where-buy-table").find("tbody")
+        seller_table = parser.find('table', class_="where-buy-table").find("tbody")
         sellers = seller_table.select('tr[class]')
         result = []
         for seller in sellers:
@@ -195,9 +214,16 @@ class Parser:
         links = []
         for product in products:
             # да
-            link = product.find('div', class_='model-short-info').find('table').find('a')['href']
+            link = product.find(class_="model-short-title")
+            if not link:
+                # it selects a div class with and without id
+                continue
+            link = link.get('href')
             links.append(link)
         return links
+
+    async def close(self) -> None:
+        await self.client.close()
 
 
 class ParserRunner:
@@ -215,8 +241,15 @@ def parse_data(urls: Dict[str, str], file: str) -> None:
     loop = asyncio.get_event_loop()
 
     parser = Parser(file, urls=urls)
-    data = loop.run_until_complete(parser.get_data())
-    parser.write_file(data)
+    try:
+        data = loop.run_until_complete(parser.get_data())
+        logger.info(f"Parser data: {data}")
+        parser.write_file(data)
+        logger.info("Parser has written data")
+    except Exception:
+        raise
+    finally:
+        loop.run_until_complete(parser.close())
 
 
 def run_parser(file: str):

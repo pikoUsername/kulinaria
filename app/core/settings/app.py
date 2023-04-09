@@ -34,6 +34,8 @@ class AppSettings(BaseAppSettings):
 
 	allowed_hosts: List[str] = ["*"]
 
+	sentry_dsn: str
+
 	logging_level: int = logging.INFO
 	loggers: Tuple[str, str] = ("uvicorn.asgi", "uvicorn.access")
 

@@ -22,7 +22,7 @@ def get_application() -> FastAPI:
 	application = FastAPI(**settings.fastapi_kwargs)
 	if not settings.debug:
 		sentry_sdk.init(
-			dsn="https://287fb62c07eb457fa646b1435f74a38d@o4504305064017920.ingest.sentry.io/4504305096851456",
+			dsn=settings.sentry_dsn,
 
 			# Set traces_sample_rate to 1.0 to capture 100%
 			# of transactions for performance monitoring.
