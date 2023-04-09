@@ -9,15 +9,14 @@ from .rwmodel import RWModel
 
 if TYPE_CHECKING:
 	from .comments import CommentInDB
-	from .seller import SellerInDB
+	from .seller import ProductSellerInDB
 	from .tag import TagsInDB
 	from .text_entities import TextEntitiesInDB
 
 
 class ProductInDB(IDModelMixin, DateTimeModelMixin, RWModel):
 	name: str = Field(max_length=92)
-	seller: SellerInDB
-	seller_id: int
+	sellers: List[ProductSellerInDB] = []
 	comments: List[CommentInDB] = []
 	tags: List[TagsInDB] = []
 	watches: int

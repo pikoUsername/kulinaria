@@ -7,18 +7,19 @@ from app.db.repositories.base import TimedModel
 from app.db.repositories.review import Reviews
 
 if TYPE_CHECKING:
-	from app.db.repositories.models import Seller, Comments, ProductTags, TextEntityProduct
+	from app.db.repositories.models import ProductSeller, Comments, ProductTags, TextEntityProduct
 
 
 class Products(TimedModel):
 	__tablename__ = "products"
 
 	name = sa.Column(sa.String(92), nullable=False)
-	seller: Mapped["Seller"] = relationship(back_populates="products")  # many:1
-	seller_id: Mapped[int] = mapped_column(sa.ForeignKey("sellers.id", ondelete="CASCADE"))
+	slug = sa.Column(sa.String(126), nullable=False)  # used in URI
+	sellers: Mapped[List["ProductSeller"]] = relationship(back_populates="product")  # 1:M
 	comments: Mapped[List["Comments"]] = relationship()  # 1:many
 	tags: Mapped[List["ProductTags"]] = relationship()  # 1:many
 	reviews: Mapped[Optional[List["Reviews"]]] = relationship()  # 1:many
+	rating: Mapped[int] = mapped_column()
 	watches = sa.Column(sa.Integer, default=0)
 	description = sa.Column(sa.Text)
 	text_entities: Mapped[List["TextEntityProduct"]] = relationship()  # 1:many for text

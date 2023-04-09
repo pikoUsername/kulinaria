@@ -5,7 +5,7 @@ from app.db.repositories.permissions import Permissions
 from app.db.repositories.product import Products
 from app.db.repositories.product_list import ProductLists
 from app.db.repositories.review import Reviews
-from app.db.repositories.seller import Seller
+from app.db.repositories.seller import Seller, ProductSeller
 from app.db.repositories.tags import Tags, ProductTags
 from app.db.repositories.text_entities import (
 	TextEntity,
@@ -23,6 +23,7 @@ from app.db.repositories.wallet import Wallet
 # to get tables use app.db.repositories.helpers.get_tables
 
 __all__ = (
+	'ProductSeller',
 	'Reviews',
 	'ProductLists',
 	'ListsToProducts',

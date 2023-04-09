@@ -41,8 +41,6 @@ class Users(BaseModel):
 		secondary=UserToGroups,
 		lazy='selectin',
 	)  # M:M
-	seller_id: Mapped[Optional[int]] = mapped_column(sa.ForeignKey("sellers.id"))
-	seller: Mapped[Optional["Seller"]] = relationship(uselist=False, foreign_keys="Seller.user_id")  # 1:1
 	is_deactivated: Mapped[Optional[bool]] = mapped_column()
 	product_lists: Mapped[List["ProductLists"]] = relationship()  # 1:M
 	phone_number = sa.Column(sa.String(18))

@@ -83,7 +83,7 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 		), True
 
 	@classmethod
-	async def create_list(cls, db: AsyncSession, obj_in: List[CreateSchemaType]) -> List[ModelType]:
+	async def create_list(cls, db: AsyncSession, obj_in: List[CreateSchemaType], **options) -> List[ModelType]:
 		ret_models = []
 		for obj in obj_in:
 			model_obj = fill(obj, cls.model)

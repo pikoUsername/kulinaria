@@ -7,11 +7,12 @@ from app.models.domain import SellerInDB
 from app.models.domain import TagsInDB
 from app.models.domain import TextEntitiesInDB
 from app.models.domain import ReviewInDB
+from ..domain.seller import ProductSellerInDB
 
 
 class ProductInResponse(RWSchema):
 	name: str
-	seller: SellerInDB
+	sellers: List[ProductSellerInDB] = []
 	comments: List[CommentInDB] = []
 	tags: List[TagsInDB] = []
 	watches: int = 0
@@ -21,7 +22,8 @@ class ProductInResponse(RWSchema):
 
 class ProductInCreate(RWSchema):
 	name: str
-	seller_id: int
+	slug: str
+	sellers: List[ProductSellerInDB]
 	tags: List[TagsInDB]
 	description: str
 

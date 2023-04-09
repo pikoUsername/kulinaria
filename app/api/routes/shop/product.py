@@ -1,4 +1,4 @@
-from typing import List, cast
+from typing import List
 
 from fastapi import APIRouter, Depends, Body, HTTPException
 from loguru import logger
@@ -10,15 +10,14 @@ from app.db.repositories.comments import CommentsCRUD
 from app.db.repositories.product import ProductsCRUD, Products
 from app.api.dependencies.authentication import get_current_user_authorizer
 from app.db.repositories.review import ReviewCrud
-from app.db.repositories.seller import SellerCRUD
 from app.db.repositories.user import Users
-from app.models.domain import SellerInDB, TextEntitiesInDB, CommentInDB
+from app.models.domain import SellerInDB, TextEntitiesInDB
+from app.models.domain.text_entities import TextEntityProductInDB
 from app.models.schemas.base import BoolResponse
 from app.models.schemas.comment import CommentInCreate, CommentInResponse
 from app.models.schemas.product import ProductInResponse, ProductInCreate, ProductInUpdate
+from app.models.schemas.product_seller import ProductSellerInResponse
 from app.models.schemas.review import ReviewInCreate
-from app.services.text_entities import Parser
-from app.db.repositories.text_entities import TextEntitiesCRUD
 from app.resources import strings
 from app.services.utils import convert_db_obj_to_model, convert_list_obj_to_model
 
@@ -35,10 +34,7 @@ async def create_product(
 		product_create: ProductInCreate = Body(..., embed=True, alias="product"),
 		db: AsyncSession = Depends(get_connection),
 ) -> ProductInResponse:
-	seller = await SellerCRUD.get_by_kwargs(
-		db, id=product_create.seller_id
-	)
-	if product := await ProductsCRUD.get_by_kwargs(db, seller_id=seller.id, name=product_create.name):
+	if product := await ProductsCRUD.get_by_kwargs(db, slug=product_create.slug):
 		raise HTTPException(
 			detail=strings.DUPLICATE_ERROR.format(
 				model=Products.__tablename__,
@@ -46,15 +42,13 @@ async def create_product(
 			),
 			status_code=400,
 		)
-	parsed_entities = Parser().parse_entities(product_create.description)
-	parsed_entities = await TextEntitiesCRUD.create_list(db, parsed_entities)
-	relations = {"seller": seller, "comments": [], "text_entities": parsed_entities}
-	product = await ProductsCRUD.create_with_relationship(db, product_create, **relations)
+	product = await ProductsCRUD.create(db, obj_in=product_create)
+
 	return ProductInResponse(
 		name=product.name,
 		description=product.description,
-		seller=convert_db_obj_to_model(seller, SellerInDB),
-		text_entities=parsed_entities,
+		sellers=product_create.sellers,
+		text_entities=convert_list_obj_to_model(product.text_entities, TextEntityProductInDB),
 	)
 
 
@@ -218,3 +212,26 @@ async def get_comments(
 	comments = convert_list_obj_to_model(product.comments, CommentInResponse)
 
 	return comments
+
+
+@router.get(
+	"/{product_id}/sellers",
+	name="products:get-sellers",
+)
+async def get_sellers(
+		product_id: int,
+		db: AsyncSession = Depends(get_connection),
+) -> List[ProductSellerInResponse]:  # TODO
+	product = await ProductsCRUD.get(db, product_id)
+
+	if not product:
+		raise HTTPException(
+			detail=strings.DOES_NOT_EXISTS.format(
+				model=Products.__tablename__,
+				id=product_id
+			),
+			status_code=400,
+		)
+	sellers = product.sellers
+	return convert_list_obj_to_model(sellers, ProductSellerInResponse)
+

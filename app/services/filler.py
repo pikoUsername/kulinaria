@@ -44,6 +44,8 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 
 	SubModelsResolver(meta).resolve(model)
 
+	Класс singleton
+
 	"""
 
 	def __init__(self) -> None:
@@ -56,7 +58,7 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 
 	def normalize_model_name(self, name: str) -> str:
 		"""
-		очищает строку для проверки от не нужного
+		Очищает строку для проверки от не нужного
 
 		:param name:
 		:return:
@@ -147,7 +149,7 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 
 	def fill(self, model: T, db_obj: ST) -> ST:  # db_obj has to be model object
 		"""
-		Заполнит до окончания, сделает все абсолютно все
+		Заполнит до окончания, сделает все абсолютно все.
 		Предполагается что модель и таблица алхимии АБСОЛЮТНО точные
 
 		:param model:
@@ -180,13 +182,13 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 
 		return db_obj
 
-	def _fill_table_data_by_one(self, db_obj: Type[sa.Table], key: str, field: Union[T, FT]) -> sa.Table:
+	def _fill_table_data_by_one(self, db_type: ST, key: str, field: Union[T, FT]) -> sa.Table:
 		"""
 		Field.type_ должен соответствовать BaseModel
 
 		Предполагается что модельки абсолютно точно реперезентеруют таблицы
 
-		:param db_obj:
+		:param db_type:
 		:param key:
 		:param field:
 		:return:
@@ -196,10 +198,9 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 		else:
 			typ = type(field)
 
-		table = self.resolve_model_name(typ)
 		obj_in_data: dict = jsonable_encoder(field, exclude_unset=True)
-		sub_main_obj = table(**obj_in_data)  # noqa
-		assert self.validate_relation(key, db_obj)
+		sub_main_obj = db_type(**obj_in_data)  # noqa
+		assert self.validate_relation(key, db_type)
 		if self.detect_sub_models(typ):
 			sub_main_obj = self.fill(field, sub_main_obj)
 

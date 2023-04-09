@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 import sqlalchemy as sa
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -15,10 +15,25 @@ class Seller(TimedModel):
 	"""
 	__tablename__ = 'sellers'
 
+	name = sa.Column(sa.String(52))
 	rating = sa.Column(sa.Float)  # 5 to 1
-	products: Mapped["Products"] = relationship(back_populates="seller")  # 1:M
+	product_seller: Mapped[List["ProductSeller"]] = relationship(back_populates="seller")  # 1:M
 	country = sa.Column(sa.String(125))
-	bio = sa.Column(sa.Text)
 	is_activated = sa.Column(sa.Boolean, default=True)
 	is_blocked = sa.Column(sa.Boolean, default=False)
-	user_id: Mapped[int] = mapped_column(sa.ForeignKey("users.id"))
+
+
+class ProductSeller(TimedModel):
+	__tablename__ = 'product_sellers'
+
+	product_id: Mapped[int] = mapped_column(sa.ForeignKey('products.id'))
+	product: Mapped["Products"] = relationship()
+	seller_id: Mapped[int] = mapped_column(sa.ForeignKey('sellers.id'))
+	seller: Mapped["Seller"] = relationship()
+	description: Mapped[str] = mapped_column()
+	name = sa.Column(sa.String(100), nullable=False)
+	# to setup postgis: https://geoalchemy.readthedocs.io/en/0.5/tutorial.html
+	where = sa.Column(sa.ARRAY(sa.Float))  # limited to 2
+	where_name = sa.Column(sa.String(52))
+	price: Mapped[int] = mapped_column()
+	link: Mapped[str] = mapped_column()

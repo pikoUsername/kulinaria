@@ -6,9 +6,19 @@ from ..common import IDModelMixin, DateTimeModelMixin
 
 
 class TextEntitiesInDB(IDModelMixin, DateTimeModelMixin, RWModel):
-	__tablename__ = "text_entities"
-
 	type: TextEntitiesTypes
 	url: HttpUrl = ""
 	offset: int
 	length: int
+
+
+class TextEntityProductInDB(TextEntitiesInDB):
+	product_id: int
+
+
+class TextEntityCommentInDB(TextEntitiesInDB):
+	comment_id: int
+
+
+class TextEntityUserInDB(TextEntitiesInDB):
+	user_id: int

@@ -9,7 +9,7 @@ from .products import ProductInDB
 from .product_lists import ProductListInDB
 from .review import ReviewInDB
 from .profiles import Profile
-from .seller import SellerInDB
+from .seller import SellerInDB, ProductSellerInDB
 from .tag import TagsInDB
 from .text_entities import TextEntitiesInDB
 from .transaction import MoneyTransactionInDB
@@ -25,6 +25,7 @@ ProductInDB.update_forward_refs(**locals())
 GroupInDB.update_forward_refs(**locals())
 Wallet.update_forward_refs(**locals())
 SellerInDB.update_forward_refs(**locals())
+ProductSellerInDB.update_forward_refs(**locals())
 CommentSection.update_forward_refs(**locals())
 User.update_forward_refs(**locals())
 UserInDB.update_forward_refs(**locals())
