@@ -1,41 +1,15 @@
+import re
 import asyncio
 from asyncio import AbstractEventLoop
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Set
 import csv
 
 from aiohttp import ClientSession
 from loguru import logger
-
 from bs4 import BeautifulSoup
-from pydantic import BaseModel
 
-
-TEST_PARSING_URLS = {
-    "phone": "https://kz.e-katalog.com/list/122/",
-    "memory card": "https://kz.e-katalog.com/list/32/",
-    "tablets": "https://kz.e-katalog.com/list/30/",
-}
-
-SEPARATOR = '\n'
-
-
-class SellerData(BaseModel):
-    name: str
-    link: str
-    description: str
-    price: int
-    color: Optional[str] = None
-    img_url: str
-
-
-class ProductData(BaseModel):
-    # СДЕЛАТЬ что бы не зависил от порядка вкладывания
-    name: str
-    category: str
-    short_description: str
-    characteristics: str  # они могут быть ОЧЕНЬ разными!  разделитель \n
-    tags: Optional[str]
-    sellers: List[SellerData]
+from .schema import SellerData, ProductData
+from .consts import TEST_PARSING_URLS, SEPARATOR, VALUE_SEP, URL_REGEX
 
 
 class Parser:
@@ -44,18 +18,20 @@ class Parser:
             file: str,
             loop: Optional[AbstractEventLoop] = None,
             urls: Dict[str, str] = None,
+            limit: int = 4,
     ) -> None:
         if urls is None:
             urls = TEST_PARSING_URLS
         self.loop = loop
         self.urls = urls
         self.file = file
+        self.limit = limit
 
         self._current_url = ""
 
         self.client = ClientSession(loop=loop)
 
-        self.parent_url = "https://kz.e-katalog.com/"
+        self.parent_url = "https://kz.e-katalog.com"
 
     async def get_data(self, urls: List[str] = None) -> List[ProductData]:
         """
@@ -78,18 +54,26 @@ class Parser:
             # это первая страница
             content = await (await self.client.get(url)).text()
             count = self.extract_pages_count(content)
+            j = 0
             logger.info(f"Pages count: {count}")
             for i in range(count):
+                if j > self.limit:
+                    logger.info("Reached limit for base url!!")
+                    break
                 content = await (await self.client.get(url + f"{i}/")).text()
                 # она будет заниматся и переходом на другие страницы
                 urls = self.get_product_links(content)
                 result_list = []
                 # боже, тройной for!
                 for sub_url in urls:
+                    if j > self.limit:
+                        logger.info("Reached limit for base url!!")
+                        break
                     logger.info(f"Parsing data url of: {sub_url}")
                     content = await (await self.client.get(self.parent_url + sub_url)).text()
                     result_ = await self.extract_detailed_info_from_page(content)
                     result_list.append(result_)
+                    j += 1
                 result.extend(result_list)
 
         return result
@@ -97,18 +81,14 @@ class Parser:
     def write_file(self, data: List[ProductData], file: Optional[str] = None) -> None:
         if file is None:
             file = self.file
-        row_meta = ProductData.__fields__.keys()
-        with open(file, "w", newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(row_meta)
+        keys = ProductData.__fields__.keys()
+        with open(file, "w", newline='', encoding="utf8") as file:
+            writer = csv.writer(file, fieldnames=keys)
             for value in data:
                 # нужно тестирование
                 writer.writerow(value.dict().values())
 
     def extract_pages_count(self, content: str) -> int:
-        # короче у них ебнутая система
-        # их юрл типо https://kz.e-katalog.com/list/30 первая страница
-        # начинается с /0 и потом 3 это /2. Идиотия(((
         parser = BeautifulSoup(content, "html.parser")
 
         result = parser.find(class_="ib page-num")
@@ -129,7 +109,6 @@ class Parser:
         short_desc = None
         if full_desc:
             if full_desc:
-                logger.info(full_desc)
                 short_desc = full_desc.find_all("p")[0].get_text()
             short_desc_first_letter = full_desc.find("span", class_="desc-ai-initcap")
             if short_desc_first_letter:
@@ -143,13 +122,37 @@ class Parser:
         for tag in tags_raw:
             tags.append(tag.get_text())
 
+        # defining charechteristics
         charc_raw = parser.find("div", class_="m-c-f2")
-        charc_list = []
-        for charc in charc_raw.find_all("div"):
-            title = charc.get('title')
-            if title:
-                charc.append(title)
+        if charc_raw:
+            # в основном это работает в вьюхах телефона
+            charc_list = []
+            for charc in charc_raw.find_all("div"):
+                title = charc.get('title')
+                if title:
+                    charc_list.append(title)
+        else:
+            charc_raw = parser.find("table", class_="one-col")
+            charc_raw = charc_raw.find_all("tr", valign="top")
+
+            charc_list = []
+
+            for chrc in charc_raw:
+                charc_name = chrc.find("span", class_="nobr ib").get_text()
+                charc_values = chrc.find("td", class_="val posr")
+                if charc_values:
+                    values = []
+                    for val in charc_values.find_all("div"):
+                        values.append(val.get_text())
+
+                    charc_value = " ".join(values)
+                elif charc_value := chrc.find("td", class_="val"):
+                    charc_value.get_text()
+                charc_list.append(f"{charc_name}{VALUE_SEP}{charc_value}")
+
         characteristics = SEPARATOR.join(charc_list)
+
+        # seller urls
         url_seller = parser.find(class_="desc-menu").find_all("a")[0]
         url_seller = url_seller['link']
 
@@ -163,7 +166,7 @@ class Parser:
         return ProductData(
             name=name,
             category=category,
-            short_description=short_desc or None ,
+            short_description=short_desc or "",
             characteristics=characteristics,
             tags=tags,
             sellers=sellers,
@@ -172,7 +175,10 @@ class Parser:
     def get_sellers(self, content: str) -> List[SellerData]:
         parser = BeautifulSoup(content, "html.parser")
 
-        seller_table = parser.find('table', class_="where-buy-table").find("tbody")
+        seller_table = parser.find(class_="where-buy-table")
+        # seller_table = seller_table.find("tbody")
+        if not seller_table:
+            return []
         sellers = seller_table.select('tr[class]')
         result = []
         for seller in sellers:
@@ -180,22 +186,43 @@ class Parser:
             price_td = seller.find(class_='where-buy-price')
             link = price_td.a['href']
             price = price_td.get_text().replace(' ', '')
-            img = seller.find(class_='where-buy-img').find(class_='hide-blacked').find('img')['src']
+
+            # parsing image
+            img = seller.find(class_='where-buy-img')
+            img = img.find(class_='hide-blacked')
+            img = img.find('script').get_text().replace(r"\/", "/")
+            img = URL_REGEX.search(img)
+            img_url = ""
+            if img:
+                img_url = img.group(0)
+
+            # parsing color
             color_elem = seller_table.find(class_='where-buy-color')
             color = None
             if color_elem:
-                bg_color = color_elem.find('div')['style']
-                color = self.get_color_from_style_string(bg_color)
+                bg_color_elem = color_elem.find('div')
+                color = ""
+                if bg_color_elem:
+                    bg_color = bg_color_elem['style']
+                    color = self.get_color_from_style_string(bg_color)
 
-            desc = seller.find(class_='where-buy-description').find('it-desc').get_text()
+            desc = seller.find(class_='where-buy-description')
+            desc = desc.find(class_='it-desc')
+            desc_text = ""
+            if desc:
+                desc_text = desc.get_text()
+
+            price = price.split()
+            price.pop(-1)
+            price = int("".join(price))
 
             sell = SellerData(
                 name=name,
                 link=link,
                 price=price,
-                img_url=img,
+                img_url=img_url,
                 color=color,
-                description=desc
+                description=desc_text
             )
             result.append(sell)
         return result
@@ -205,13 +232,14 @@ class Parser:
         styles = color.split('\n')
         for style in styles:
             if 'background-color' in style:
-                _, color = style.split(":")
+                style = style.split(";")
+                _, color = style[0].split(":")
                 return color
 
-    def get_product_links(self, content: str) -> List[str]:
+    def get_product_links(self, content: str) -> Set[str]:
         parser = BeautifulSoup(content, "html.parser")
         products = parser.find('form', id='list_form1').select('div[id]')
-        links = []
+        links = set()
         for product in products:
             # да
             link = product.find(class_="model-short-title")
@@ -219,19 +247,11 @@ class Parser:
                 # it selects a div class with and without id
                 continue
             link = link.get('href')
-            links.append(link)
+            links.add(link)
         return links
 
     async def close(self) -> None:
         await self.client.close()
-
-
-class ParserRunner:
-    def __init__(self, parser: Parser, settings) -> None:
-        self.parser = parser
-
-    async def run(self):
-        pass
 
 
 def parse_data(urls: Dict[str, str], file: str) -> None:
@@ -269,7 +289,7 @@ def run_parser(file: str):
     две сессии которые будут записывать в одну бд
     3) будут использваны модули core, и db.
     """
-    from app.core.settings import get_app_settings
+    from app.core.config import get_app_settings
 
     parser = Parser(file, urls=TEST_PARSING_URLS)
 
