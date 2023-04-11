@@ -14,5 +14,5 @@ class ProductLists(TimedModel):
 	__tablename__ = 'product_lists'
 
 	name = sa.Column(sa.String(52))
-	products: Mapped[List["Products"]] = relationship(secondary=ListsToProducts)  # M:M
+	products: Mapped[List["Products"]] = relationship(secondary=ListsToProducts, lazy='selectin')  # M:M
 	user_id: Mapped[int] = mapped_column(sa.ForeignKey("users.id"))

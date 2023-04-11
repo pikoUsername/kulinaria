@@ -17,6 +17,7 @@ from app.db.repositories.text_entities import (
 from app.db.repositories.transaction import MoneyTransaction
 from app.db.repositories.user import Users
 from app.db.repositories.wallet import Wallet
+from app.db.repositories.category import Category
 
 # Helper file for alembic
 # NOTE: Don't import from anywhere in application to this file directly
@@ -35,6 +36,7 @@ __all__ = (
 	'Wallet',
 	'Groups',
 	'Comments',
+	'Category',
 	'Products',
 	'ProductTags',
 	'TextEntity',

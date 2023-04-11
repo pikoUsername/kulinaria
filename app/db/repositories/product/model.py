@@ -4,6 +4,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from app.db.repositories.base import TimedModel
+from app.db.repositories.category.model import Category
 from app.db.repositories.review import Reviews
 
 if TYPE_CHECKING:
@@ -21,6 +22,8 @@ class Products(TimedModel):
 	reviews: Mapped[Optional[List["Reviews"]]] = relationship()  # 1:many
 	rating: Mapped[int] = mapped_column()
 	watches = sa.Column(sa.Integer, default=0)
+	category: Mapped["Category"] = relationship()  # M:1
+	category_id: Mapped[int] = mapped_column(sa.ForeignKey("categories.id"))
 	description = sa.Column(sa.Text)
-	text_entities: Mapped[List["TextEntityProduct"]] = relationship()  # 1:many for text
+	text_entities: Mapped[Optional[List["TextEntityProduct"]]] = relationship()  # 1:many for text
 	is_hidden = sa.Column(sa.Boolean, default=False)

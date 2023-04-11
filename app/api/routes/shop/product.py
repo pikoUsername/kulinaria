@@ -10,10 +10,11 @@ from app.db.repositories.comments import CommentsCRUD
 from app.db.repositories.product import ProductsCRUD, Products
 from app.api.dependencies.authentication import get_current_user_authorizer
 from app.db.repositories.review import ReviewCrud
-from app.db.repositories.user import Users
-from app.models.domain import SellerInDB, TextEntitiesInDB
+from app.db.repositories.user import Users, UserCrud
+from app.models.domain import SellerInDB, TextEntitiesInDB, ProductInDB
 from app.models.domain.text_entities import TextEntityProductInDB
 from app.models.schemas.base import BoolResponse
+from app.models.schemas.cart import FavouriteListInResponse
 from app.models.schemas.comment import CommentInCreate, CommentInResponse
 from app.models.schemas.product import ProductInResponse, ProductInCreate, ProductInUpdate
 from app.models.schemas.product_seller import ProductSellerInResponse
@@ -235,3 +236,38 @@ async def get_sellers(
 	sellers = product.sellers
 	return convert_list_obj_to_model(sellers, ProductSellerInResponse)
 
+
+@router.post(
+	"/{product_id}/add_favourite",
+	name="products:add_favourite",
+)
+async def add_favourite(
+		product_id: int,
+		user: Users = Depends(get_current_user_authorizer(required=True)),
+		db: AsyncSession = Depends(get_connection),
+) -> BoolResponse:
+	product = await ProductsCRUD.get(db, id=product_id)
+	if not product:
+		raise HTTPException(
+			detail=strings.DOES_NOT_EXISTS.format(
+				model=Products.__tablename__,
+				id=product_id
+			),
+			status_code=400,
+		)
+	await UserCrud.add_product_cart(db, user, product)
+	return BoolResponse(ok=True)
+
+
+@router.get(
+	'/get_favourites',
+	name="products:get_favourites",
+)
+async def get_favourites(
+	user: Users = Depends(get_current_user_authorizer(required=True)),
+	db: AsyncSession = Depends(get_connection),
+) -> FavouriteListInResponse:
+	products = await UserCrud.get_products_cart(db, user)
+	return FavouriteListInResponse(
+		products=convert_list_obj_to_model(products, ProductInDB),
+	)

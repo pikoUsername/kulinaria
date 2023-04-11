@@ -14,7 +14,6 @@ from app.services.security import verify_password, get_password_hash, generate_s
 if TYPE_CHECKING:
 	from app.db.repositories.permissions import Permissions
 	from app.db.repositories.groups import Groups
-	from app.db.repositories.seller import Seller
 	from app.db.repositories.product_list import ProductLists
 
 
@@ -42,7 +41,8 @@ class Users(BaseModel):
 		lazy='selectin',
 	)  # M:M
 	is_deactivated: Mapped[Optional[bool]] = mapped_column()
-	product_lists: Mapped[List["ProductLists"]] = relationship()  # 1:M
+	product_lists: Mapped[Optional[List["ProductLists"]]] = relationship()  # 1:M
+	cart: Mapped["ProductLists"] = relationship(lazy='selectin')
 	phone_number = sa.Column(sa.String(18))
 
 	def __init__(self, password=None, password_hash=None, salt=None, **kwargs) -> None:

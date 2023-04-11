@@ -1,12 +1,15 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.schemas.product import ProductInCreate, ProductInUpdate
 from app.services.filler import fill
 from app.services.text_entities import Parser
-from ..comments import Comments
+if TYPE_CHECKING:
+	from ..comments import Comments
+	from ..review import Reviews
 from ..common import BaseCrud
 from .model import Products
-from ..review import Reviews
 from ..seller import ProductSeller
 from ..text_entities import TextEntityProduct, TextEntitiesCRUD
 
@@ -19,7 +22,7 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 			cls,
 			db: AsyncSession,
 			product: Products,
-			*comments: Comments
+			*comments: "Comments"
 	) -> None:
 		"""
 		Comment does not intended to get by one,
@@ -34,7 +37,7 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 			cls,
 			db: AsyncSession,
 			product: Products,
-			*reviews: Reviews
+			*reviews: "Reviews"
 	) -> None:
 		"""
 		Same as add_comment
