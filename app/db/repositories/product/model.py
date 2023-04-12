@@ -22,7 +22,7 @@ class Products(TimedModel):
 	reviews: Mapped[Optional[List["Reviews"]]] = relationship()  # 1:many
 	rating: Mapped[int] = mapped_column()
 	watches = sa.Column(sa.Integer, default=0)
-	category: Mapped["Category"] = relationship()  # M:1
+	category: Mapped["Category"] = relationship(back_populates="products")  # M:1
 	category_id: Mapped[int] = mapped_column(sa.ForeignKey("categories.id"))
 	description = sa.Column(sa.Text)
 	text_entities: Mapped[Optional[List["TextEntityProduct"]]] = relationship()  # 1:many for text

@@ -14,4 +14,4 @@ class Category(TimedModel):
 
     name = sa.Column(sa.String(52), nullable=False)
     slug = sa.Column(sa.String(128))
-    products: Mapped[List["Products"]] = relationship()
+    products: Mapped[List["Products"]] = relationship(back_populates="category")

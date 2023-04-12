@@ -17,8 +17,9 @@ async def connect_to_db(app: FastAPI, settings: AppSettings) -> None:
 	Session.configure(bind=engine)
 	current_session.configure(bind=engine)
 
-	async with engine.begin() as conn:
-		await conn.run_sync(Meta.create_all)
+	# очень вредный кусок кода
+	# async with engine.begin() as conn:
+	# 	await conn.run_sync(Meta.create_all)
 
 	app.state.engine = engine
 	app.state.session = Session

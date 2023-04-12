@@ -83,7 +83,8 @@ class Parser:
             file = self.file
         keys = ProductData.__fields__.keys()
         with open(file, "w", newline='', encoding="utf8") as file:
-            writer = csv.writer(file, fieldnames=keys)
+            writer = csv.writer(file)
+            writer.writerow(keys)
             for value in data:
                 # нужно тестирование
                 writer.writerow(value.dict().values())

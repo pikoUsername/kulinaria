@@ -7,6 +7,7 @@ from app.db.repositories.base import TimedModel
 from app.db.repositories.helpers import ListsToProducts
 
 if TYPE_CHECKING:
+	from app.db.repositories.user import Users
 	from app.db.repositories.models import Products
 
 
@@ -16,3 +17,4 @@ class ProductLists(TimedModel):
 	name = sa.Column(sa.String(52))
 	products: Mapped[List["Products"]] = relationship(secondary=ListsToProducts, lazy='selectin')  # M:M
 	user_id: Mapped[int] = mapped_column(sa.ForeignKey("users.id"))
+	user: Mapped["Users"] = relationship(back_populates="cart")

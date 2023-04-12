@@ -41,8 +41,8 @@ class Users(BaseModel):
 		lazy='selectin',
 	)  # M:M
 	is_deactivated: Mapped[Optional[bool]] = mapped_column()
-	product_lists: Mapped[Optional[List["ProductLists"]]] = relationship()  # 1:M
-	cart: Mapped["ProductLists"] = relationship(lazy='selectin')
+	# product_lists: Mapped[Optional[List["ProductLists"]]] = relationship(back_populates="user")  # 1:M
+	cart: Mapped["ProductLists"] = relationship(lazy='selectin', back_populates="user")  # 1:1
 	phone_number = sa.Column(sa.String(18))
 
 	def __init__(self, password=None, password_hash=None, salt=None, **kwargs) -> None:
