@@ -44,7 +44,6 @@ async def signup(
 		)
 
 	user = await UserCrud.create(session, user_login)
-	await UserCrud.set_admin(session, user, is_admin=True)
 
 	public_user = User(
 		username=user.username,

@@ -14,10 +14,12 @@ from ..domain.seller import ProductSellerInDB
 
 class ProductInResponse(RWSchema):
 	name: str
+	slug: str
 	sellers: List[ProductSellerInDB] = []
 	comments: List[CommentInDB] = []
 	tags: List[TagsInDB] = []
 	watches: int = 0
+	rating: Optional[float] = 0.0
 	description: str
 	text_entities: List[TextEntitiesInDB] = []
 

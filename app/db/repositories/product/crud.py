@@ -1,10 +1,13 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from loguru import logger
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.schemas.category import CategoryInCreate
 from app.models.schemas.product import ProductInCreate, ProductInUpdate
+from app.models.schemas.seller import SellerInCreate
 from app.models.schemas.tags import TagsInCreate
 from app.services.filler import fill
 from app.services.text_entities import Parser
@@ -17,7 +20,7 @@ if TYPE_CHECKING:
 	from ..review import Reviews
 from ..common import BaseCrud
 from .model import Products
-from ..seller import ProductSeller
+from ..seller import ProductSeller, SellerCRUD
 from ..text_entities import TextEntityProduct, TextEntitiesCRUD
 
 
@@ -59,7 +62,6 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 		for tag in tags:
 			result_tags.append(fill(tag, ProductTags))
 		product.tags = result_tags
-		db.add(product)
 		await db.flush([product])
 
 	@classmethod

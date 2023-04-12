@@ -12,7 +12,7 @@ from app.resources import strings
 router = APIRouter()
 
 
-@router.post("{category_id}/list", name="get-category-products")
+@router.post("/{category_id}/list", name="get-category-products")
 async def get_category_products(
         category_id: int,
         pagination_info: PaginationInfo = Body(..., embed=True, alias="pagination"),

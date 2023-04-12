@@ -1,3 +1,4 @@
+from app.db.repositories.base import BaseModel, TimedModel
 from app.db.repositories.comments import Comments
 from app.db.repositories.groups import Groups
 from app.db.repositories.helpers import ListsToProducts, UserToGroups
@@ -24,6 +25,8 @@ from app.db.repositories.category import Category
 # to get tables use app.db.repositories.helpers.get_tables
 
 __all__ = (
+	'BaseModel',
+	'TimedModel',
 	'ProductSeller',
 	'Reviews',
 	'ProductLists',

@@ -1,7 +1,9 @@
 from typing import Optional, List
 
 import sqlalchemy as sa
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.db.repositories.common import BaseCrud
 from app.models.domain import User, ProductListInDB
@@ -15,6 +17,7 @@ from .model import Users
 __all__ = "UserCrud",
 
 from ..groups import GroupsCRUD
+from ..helpers import ListsToProducts
 from ..permissions import PermissionsCrud
 from ..product import Products
 from ..product_list import ProductListCrud, ProductLists
@@ -86,14 +89,18 @@ class UserCrud(BaseCrud[Users, UserInCreate, UserInUpdate]):
 	@classmethod
 	async def add_product_cart(cls, db: AsyncSession, user: Users, product: Products) -> None:
 		user.cart.products.append(product)
-		await db.flush(user)
+		await db.flush([user])
 
 	@classmethod
-	async def get_products_cart(cls, db: AsyncSession, user: Users) -> List[Products]:
-		return user.cart.products
+	async def get_cart(cls, db: AsyncSession, user: Users) -> List[Products]:
+		stmt = select(Products).where(
+			ProductLists.id == user.cart.id
+		)
+		result = await db.scalars(stmt)
+		result = result.all()
+		return result
 
 	@classmethod
 	async def set_admin(cls, db: AsyncSession, user: Users, is_admin: bool = False) -> None:
 		user.is_stuff = is_admin
-		db.add(user)
 		await db.flush([user])

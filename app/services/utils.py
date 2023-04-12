@@ -1,9 +1,12 @@
 from typing import TypeVar, Type, List, Dict, Any
 
 import sqlalchemy as sa
+from loguru import logger
 from pydantic import BaseModel
 
 from .translate import translate
+
+from pydantic.main import BaseModel
 
 
 T = TypeVar("T", bound=BaseModel)
@@ -18,6 +21,7 @@ def convert_list_obj_to_model(objects: List[ST], model: Type[T]) -> List[T]:
 	models = []
 
 	for obj in objects:
+		logger.info(obj)
 		models.append(model.from_orm(obj))
 
 	return models

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 import sqlalchemy as sa
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -27,9 +27,8 @@ class ProductSeller(TimedModel):
 	__tablename__ = 'product_sellers'
 
 	product_id: Mapped[int] = mapped_column(sa.ForeignKey('products.id'))
-	product: Mapped["Products"] = relationship()
-	seller_id: Mapped[int] = mapped_column(sa.ForeignKey('sellers.id'))
-	seller: Mapped["Seller"] = relationship()
+	seller_id: Mapped[Optional[int]] = mapped_column(sa.ForeignKey('sellers.id'))
+	seller: Mapped[Optional["Seller"]] = relationship(lazy='selectin')
 	description: Mapped[str] = mapped_column()
 	name = sa.Column(sa.String(100), nullable=False)
 	where = sa.Column(sa.ARRAY(sa.Float))  # limited to 2

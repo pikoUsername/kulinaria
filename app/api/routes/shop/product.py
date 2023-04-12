@@ -11,7 +11,7 @@ from app.db.repositories.product import ProductsCRUD, Products
 from app.api.dependencies.authentication import get_current_user_authorizer
 from app.db.repositories.review import ReviewCrud
 from app.db.repositories.user import Users, UserCrud
-from app.models.domain import SellerInDB, TextEntitiesInDB, ProductInDB
+from app.models.domain import SellerInDB, TextEntitiesInDB, ProductInDB, ProductSellerInDB
 from app.models.domain.text_entities import TextEntityProductInDB
 from app.models.schemas.base import BoolResponse
 from app.models.schemas.cart import CartListInResponse
@@ -26,9 +26,24 @@ from app.services.utils import convert_db_obj_to_model, convert_list_obj_to_mode
 router = APIRouter(tags=["product"])
 
 
+@router.get(
+	'/get_cart',
+	name="product:get_cart",
+)
+async def get_cart(
+	user: Users = Depends(get_current_user_authorizer(required=True)),
+	db: AsyncSession = Depends(get_connection),
+) -> CartListInResponse:
+	products = await UserCrud.get_cart(db, user)
+	result_products = convert_list_obj_to_model(products, ProductInResponse)
+	return CartListInResponse(
+		products=result_products,
+	)
+
+
 @router.post(
 	"/",
-	name="products:create-product",
+	name="product:create-product",
 	dependencies=[Depends(CheckPermission("*", Products))]
 )
 async def create_product(
@@ -46,22 +61,24 @@ async def create_product(
 	product = await ProductsCRUD.create(db, obj_in=product_create)
 
 	return ProductInResponse(
+		slug=product.slug,
 		name=product.name,
+		rating=product.rating,
 		description=product.description,
-		sellers=product_create.sellers,
+		sellers=convert_list_obj_to_model(product.sellers, ProductSellerInDB),
 		text_entities=convert_list_obj_to_model(product.text_entities, TextEntityProductInDB),
 	)
 
 
 @router.get(
 	"/{product_id}",
-	name="products:get-product",
+	name="product:get-product",
 )
 async def get_product(
 		product_id: int,
 		db: AsyncSession = Depends(get_connection)
 ) -> ProductInResponse:
-	product = await ProductsCRUD.get(db, product_id)
+	product = await ProductsCRUD.get_by_kwargs(db, id=product_id)
 	if not product:
 		raise HTTPException(
 			detail=strings.DOES_NOT_EXISTS.format(model=Products.__tablename__, id=product_id),
@@ -69,16 +86,17 @@ async def get_product(
 		)
 
 	return ProductInResponse(
+		slug=product.slug,
 		name=product.name,
 		description=product.description,
-		seller=convert_db_obj_to_model(product.seller, SellerInDB),
+		sellers=convert_list_obj_to_model(product.sellers, ProductSellerInDB),
 		text_entities=product.text_entities,
 	)
 
 
 @router.put(
 	"/{product_id}",
-	name="products:update-product",
+	name="product:update-product",
 	dependencies=[Depends(CheckPermission("update", Products))]
 )
 async def update_product(
@@ -105,7 +123,7 @@ async def update_product(
 
 @router.delete(
 	"/{product_id}",
-	name="products:delete-product",
+	name="product:delete-product",
 	dependencies=[Depends(CheckPermission("delete", Products))]
 )
 async def delete_product(
@@ -133,7 +151,7 @@ async def delete_product(
 
 @router.post(
 	"/{product_id}/review",
-	name="products:review",
+	name="product:review",
 )
 async def review_product(
 		product_id: int,
@@ -163,7 +181,7 @@ async def review_product(
 
 @router.post(
 	"/{product_id}/comment",
-	name="products:comment",
+	name="product:comment",
 )
 async def add_comment(
 		product_id: int,
@@ -193,7 +211,7 @@ async def add_comment(
 
 @router.get(
 	"/{product_id}/comments",
-	name="products:get-comments",
+	name="product:get-comments",
 )
 async def get_comments(
 		product_id: int,
@@ -217,7 +235,7 @@ async def get_comments(
 
 @router.get(
 	"/{product_id}/sellers",
-	name="products:get-sellers",
+	name="product:get-sellers",
 )
 async def get_sellers(
 		product_id: int,
@@ -239,7 +257,7 @@ async def get_sellers(
 
 @router.post(
 	"/{product_id}/add_cart",
-	name="products:add_cart",
+	name="product:add_cart",
 )
 async def add_favourite(
 		product_id: int,
@@ -258,18 +276,3 @@ async def add_favourite(
 	await UserCrud.add_product_cart(db, user, product)
 	return BoolResponse(ok=True)
 
-
-@router.get(
-	'/get_cart',
-	name="products:get_cart",
-)
-async def get_cart(
-	user: Users = Depends(get_current_user_authorizer(required=True)),
-	db: AsyncSession = Depends(get_connection),
-) -> CartListInResponse:
-	products = await UserCrud.get_products_cart(db, user)
-	products = convert_list_obj_to_model(products, ProductInDB)
-	logger.info(products)
-	return CartListInResponse(
-		products=products,
-	)

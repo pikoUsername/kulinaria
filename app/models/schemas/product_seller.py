@@ -9,6 +9,7 @@ class ProductSellerInResponse(RWSchema):
     name: str
     description: str
     where_name: str
+    where: Tuple[float, float] = None
 
 
 class ProductSellerInCreate(RWSchema):

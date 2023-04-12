@@ -29,9 +29,9 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
 	@classmethod
 	async def get(cls, db: AsyncSession, id: Any) -> Optional[ModelType]:
-		result = await db.execute(sa.select(cls.model).where(cls.model.id == id))
+		result = await db.scalars(sa.select(cls.model).where(cls.model.id == id))
 		result = result.first()
-		return result[0] if result else None
+		return result
 
 	@classmethod
 	async def get_by_values(
@@ -46,9 +46,9 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 			cls, db: AsyncSession, **kwargs: Any
 	) -> Optional[ModelType]:
 		stmt = sa.select(cls.model).filter_by(**kwargs)
-		result = await db.execute(stmt)
+		result = await db.scalars(stmt)
 		result = result.first()
-		return result[0] if result else None
+		return result
 
 	@classmethod
 	async def get_or_create(
@@ -124,7 +124,7 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 					rel.append(val)
 				continue
 			setattr(db_obj, key, value)
-		db.add(db_obj)
+		# db.add(db_obj)
 		await db.flush([db_obj])
 		return db_obj
 

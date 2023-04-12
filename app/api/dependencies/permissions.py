@@ -69,6 +69,8 @@ class CheckPermission(params.Depends):
 		:param settings:
 		:return:
 		"""
+		if settings.debug:
+			return
 		not_enough_permissions = HTTPException(
 			status_code=HTTP_403_FORBIDDEN,
 			detail=strings.NOT_ENOUGH_PERMISSIONS,

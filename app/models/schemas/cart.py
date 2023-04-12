@@ -1,8 +1,8 @@
 from typing import List
 
+from .product import ProductInResponse
 from .rwschema import RWSchema
-from ..domain import ProductSellerInDB
 
 
 class CartListInResponse(RWSchema):
-    products: List[ProductSellerInDB] = []
+    products: List[ProductInResponse] = []
