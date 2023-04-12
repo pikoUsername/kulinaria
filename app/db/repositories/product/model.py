@@ -20,7 +20,7 @@ class Products(TimedModel):
 	comments: Mapped[List["Comments"]] = relationship()  # 1:many
 	tags: Mapped[List["ProductTags"]] = relationship()  # 1:many
 	reviews: Mapped[Optional[List["Reviews"]]] = relationship()  # 1:many
-	rating: Mapped[int] = mapped_column()
+	rating: Mapped[Optional[float]] = mapped_column()
 	watches = sa.Column(sa.Integer, default=0)
 	category: Mapped["Category"] = relationship(back_populates="products")  # M:1
 	category_id: Mapped[int] = mapped_column(sa.ForeignKey("categories.id"))

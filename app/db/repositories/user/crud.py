@@ -17,7 +17,7 @@ __all__ = "UserCrud",
 from ..groups import GroupsCRUD
 from ..permissions import PermissionsCrud
 from ..product import Products
-from ..product_list import ProductListCrud
+from ..product_list import ProductListCrud, ProductLists
 
 
 class UserCrud(BaseCrud[Users, UserInCreate, UserInUpdate]):
@@ -61,23 +61,27 @@ class UserCrud(BaseCrud[Users, UserInCreate, UserInUpdate]):
 	async def create(cls, db: AsyncSession, obj_in: UserInCreate) -> Users:
 		group = await GroupsCRUD.get_by_kwargs(db, name=GlobalGroups.default_user.name)
 		perm = await PermissionsCrud.get_by_kwargs(db, name=GlobalPermissions.anonymous.name)
-
-		product_list = ProductListInDB(
-			name="cart",
-			products=[]
-		)
-
-		cart = await ProductListCrud.create(db, product_list)
 		user = await super().create_with_relationship(
 			db,
 			obj_in,
 			groups=[group],
 			permission=perm,
-			product_lists=[],
-			cart=cart,
 		)
+		await cls.create_product_cart(db, user)
 
 		return user
+
+	@classmethod
+	async def create_product_cart(cls, db: AsyncSession, user: Users) -> ProductLists:
+		product_list = ProductListInDB(
+			name="cart",
+			products=[]
+		)
+		cart = await ProductListCrud.create_with_relationship(db, product_list, user=user)
+		user.cart = cart
+		db.add(user)
+		await db.flush([user])
+		return cart
 
 	@classmethod
 	async def add_product_cart(cls, db: AsyncSession, user: Users, product: Products) -> None:
@@ -87,3 +91,9 @@ class UserCrud(BaseCrud[Users, UserInCreate, UserInUpdate]):
 	@classmethod
 	async def get_products_cart(cls, db: AsyncSession, user: Users) -> List[Products]:
 		return user.cart.products
+
+	@classmethod
+	async def set_admin(cls, db: AsyncSession, user: Users, is_admin: bool = False) -> None:
+		user.is_stuff = is_admin
+		db.add(user)
+		await db.flush([user])

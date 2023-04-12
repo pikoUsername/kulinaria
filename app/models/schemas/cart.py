@@ -4,5 +4,5 @@ from .rwschema import RWSchema
 from ..domain import ProductSellerInDB
 
 
-class FavouriteListInResponse(RWSchema):
+class CartListInResponse(RWSchema):
     products: List[ProductSellerInDB] = []

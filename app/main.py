@@ -11,6 +11,7 @@ from app.core.config import get_app_settings
 from app.core.events import create_start_app_handler, create_stop_app_handler
 from app.db.repositories import models  # noqa
 from app import middlewares
+from app.services.filler import ModelsFiller
 
 
 def get_application() -> FastAPI:
@@ -20,6 +21,9 @@ def get_application() -> FastAPI:
 	settings.configure_logging()
 
 	application = FastAPI(**settings.fastapi_kwargs)
+
+	application.state.models_filler = ModelsFiller()
+	ModelsFiller.set_current(application.state.models_filler)
 	if not settings.debug:
 		sentry_sdk.init(
 			dsn=settings.sentry_dsn,

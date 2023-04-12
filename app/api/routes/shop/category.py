@@ -21,12 +21,12 @@ async def get_category_products(
     category = await CategoryCRUD.get(db, id=category_id)
     if not category:
         raise HTTPException(
-			detail=strings.DOES_NOT_EXISTS.format(
-				model=Category.__tablename__,
-				id=category_id,
-			),
-			status_code=400,
-		)
+            detail=strings.DOES_NOT_EXISTS.format(
+                model=Category.__tablename__,
+                id=category_id,
+            ),
+            status_code=400,
+        )
     products = await CategoryCRUD.get_paginated_products(db, pagination_info, category_id=category_id)
     page_count = await CategoryCRUD.get_total_pages_of_products(db, pagination_info, category_id=category_id)
     return PaginatedCategoryListResponse(

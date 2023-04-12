@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, Body, HTTPException
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_201_CREATED
 
 from app.api.dependencies.database import get_connection
 from app.db.repositories.user import UserCrud
+from app.models.domain import User
 from app.models.schemas.users import UserInResponse, UserWithToken, UserInCreate, UserInLogin
 
 from app.core.config import get_app_settings
@@ -42,9 +44,15 @@ async def signup(
 		)
 
 	user = await UserCrud.create(session, user_login)
+	await UserCrud.set_admin(session, user, is_admin=True)
+
+	public_user = User(
+		username=user.username,
+		email=user.email
+	)
 
 	token = jwt.create_access_token_for_user(
-		user,
+		public_user,
 		secret_key=str(settings.secret_key.get_secret_value()),
 	)
 

@@ -14,7 +14,7 @@ from app.db.repositories.user import Users, UserCrud
 from app.models.domain import SellerInDB, TextEntitiesInDB, ProductInDB
 from app.models.domain.text_entities import TextEntityProductInDB
 from app.models.schemas.base import BoolResponse
-from app.models.schemas.cart import FavouriteListInResponse
+from app.models.schemas.cart import CartListInResponse
 from app.models.schemas.comment import CommentInCreate, CommentInResponse
 from app.models.schemas.product import ProductInResponse, ProductInCreate, ProductInUpdate
 from app.models.schemas.product_seller import ProductSellerInResponse
@@ -238,8 +238,8 @@ async def get_sellers(
 
 
 @router.post(
-	"/{product_id}/add_favourite",
-	name="products:add_favourite",
+	"/{product_id}/add_cart",
+	name="products:add_cart",
 )
 async def add_favourite(
 		product_id: int,
@@ -260,14 +260,16 @@ async def add_favourite(
 
 
 @router.get(
-	'/get_favourites',
-	name="products:get_favourites",
+	'/get_cart',
+	name="products:get_cart",
 )
-async def get_favourites(
+async def get_cart(
 	user: Users = Depends(get_current_user_authorizer(required=True)),
 	db: AsyncSession = Depends(get_connection),
-) -> FavouriteListInResponse:
+) -> CartListInResponse:
 	products = await UserCrud.get_products_cart(db, user)
-	return FavouriteListInResponse(
-		products=convert_list_obj_to_model(products, ProductInDB),
+	products = convert_list_obj_to_model(products, ProductInDB)
+	logger.info(products)
+	return CartListInResponse(
+		products=products,
 	)

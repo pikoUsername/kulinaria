@@ -1,3 +1,5 @@
+from typing import Optional
+
 import sqlalchemy as sa
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
@@ -15,5 +17,5 @@ class ProductTags(Tags):
 	__tablename__ = "product_tags"
 
 	product_id: Mapped[int] = mapped_column(sa.ForeignKey("products.id"))
-	sub_tags: Mapped["ProductTags"] = relationship("ProductTags")
-	parent_tag_id: Mapped[int] = mapped_column(sa.ForeignKey('product_tags.id'))
+	sub_tags: Mapped[Optional["ProductTags"]] = relationship("ProductTags")
+	parent_tag_id: Mapped[Optional[int]] = mapped_column(sa.ForeignKey('product_tags.id'))

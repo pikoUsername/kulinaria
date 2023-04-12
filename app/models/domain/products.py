@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, List
 
 from pydantic import Field
 
+from .category import CategoryInDB
 from ..common import IDModelMixin, DateTimeModelMixin
 from .rwmodel import RWModel
 
@@ -19,6 +20,7 @@ class ProductInDB(IDModelMixin, DateTimeModelMixin, RWModel):
 	sellers: List[ProductSellerInDB] = []
 	comments: List[CommentInDB] = []
 	tags: List[TagsInDB] = []
-	watches: int
-	description: str
+	category: CategoryInDB = None
+	watches: int = 0
+	description: str = ""
 	text_entities: List[TextEntitiesInDB] = []

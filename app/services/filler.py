@@ -1,7 +1,8 @@
 from abc import abstractmethod
-from typing import TypeVar, List, Any, Type, ForwardRef, Union
+from typing import TypeVar, List, Any, Type, ForwardRef, Union, Dict, Tuple, Set, Sequence
 
 import sqlalchemy as sa
+from loguru import logger
 from sqlalchemy.orm.attributes import QueryableAttribute
 from pydantic import BaseModel
 from pydantic.fields import ModelField
@@ -104,7 +105,7 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 	def detect_sub_models(self, model: T) -> List[str]:
 		result = []
 		for key, value in model.__fields__.items():
-			if issubclass(value.type_, BaseModel):
+			if type(value.type_) is BaseModel:
 				try:
 					self.resolve_model_name(value.type_)
 				except TypeError as exc:
@@ -133,17 +134,20 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 		return rel
 
 	def check_if_iterable(self, field: ModelField) -> bool:
+		seq_list = {"list", "set", "tuple", "sequence", "iterable"}  # very stupid way to check
 		if field.outer_type_ == field.type_:
 			return False
 		if isinstance(field.outer_type_, ForwardRef):
 			for_ref = field.outer_type_.__forward_arg__.lower()
-			seq_list = {"list", "set", "tuple", "sequence", "iterable"}  # very stupid way to check
 			# TODO: find a way to evaluate forward ref, without cracky hacks
 			for seq in seq_list:
 				if seq in for_ref:
 					return True
-		else:
-			if isinstance(field.outer_type_.__origin__, (list, set, tuple)):
+		elif isinstance(field.outer_type_, (List, Tuple, Set, Sequence)):
+			return True
+		elif hasattr(field.outer_type_, "__origin__"):
+			origin_name = field.outer_type_.__origin__.__name__
+			if origin_name in seq_list:
 				return True
 		return False
 
@@ -157,20 +161,22 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 		:return:
 		"""
 		relations = {}
+		data = model.dict(exclude_unset=True)
 
 		for key, field in model.__fields__.items():
 			field: ModelField
-			if issubclass(field.type_, BaseModel):
+			if isinstance(field.type_, BaseModel):
 				if self.check_if_iterable(field):
 					to_iterate = getattr(model, key)
 					for val in to_iterate:
-						db_rel_f = self._fill_table_data_by_one(db_obj, key, val)
+						db_rel_f = self._fill_table_data_by_one(db_obj, key, val, data)
 						if not relations.get(key, None):
 							relations[key] = []
 						relations[key].append(db_rel_f)
 					# _getattr_and_set_list_or_append(db_obj, key, db_rel_f)
 					continue
-				db_rel = self._fill_table_data_by_one(db_obj, key, field)
+				logger.info(str(field.outer_type_), str(field.type_), field)
+				db_rel = self._fill_table_data_by_one(db_obj, key, field, data)
 				relations[key] = db_rel
 
 		data = jsonable_encoder(
@@ -178,11 +184,12 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 			exclude_unset=True,
 			exclude=set(self.detect_sub_models(model))
 		)
+		logger.info(f"Filler data: {data}")
 		db_obj = db_obj(**data, **relations)
 
 		return db_obj
 
-	def _fill_table_data_by_one(self, db_type: ST, key: str, field: Union[T, FT]) -> sa.Table:
+	def _fill_table_data_by_one(self, db_type: ST, key: str, field: Union[T, FT], data: Dict[str, Any]) -> sa.Table:
 		"""
 		Field.type_ должен соответствовать BaseModel
 
@@ -198,7 +205,7 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 		else:
 			typ = type(field)
 
-		obj_in_data: dict = jsonable_encoder(field, exclude_unset=True)
+		obj_in_data: dict = typ(**data[key])
 		sub_main_obj = db_type(**obj_in_data)  # noqa
 		assert self.validate_relation(key, db_type)
 		if self.detect_sub_models(typ):
@@ -211,6 +218,12 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 
 		data = jsonable_encoder(obj_in, exclude_unset=True)
 		return db_type(**data)  # noqa
+
+	def model_field_encoder(self, field: ModelField) -> dict:
+		"""
+		Предполгается что это без field не имеет типо итератора
+		"""
+		pass
 
 
 class _SqlAlchemyDuplicationResolver:

@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from .product_seller import ProductSellerInCreate
 from .rwschema import RWSchema
 
 from app.models.domain import CommentInDB
@@ -7,6 +8,7 @@ from app.models.domain import SellerInDB
 from app.models.domain import TagsInDB
 from app.models.domain import TextEntitiesInDB
 from app.models.domain import ReviewInDB
+from .tags import TagsInCreate
 from ..domain.seller import ProductSellerInDB
 
 
@@ -23,8 +25,9 @@ class ProductInResponse(RWSchema):
 class ProductInCreate(RWSchema):
 	name: str
 	slug: str
-	sellers: List[ProductSellerInDB]
-	tags: List[TagsInDB]
+	sellers: List[ProductSellerInCreate]
+	tags: List[TagsInCreate]
+	category: str
 	description: str
 
 

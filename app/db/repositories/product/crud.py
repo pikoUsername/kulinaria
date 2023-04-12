@@ -1,10 +1,14 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.schemas.product import ProductInCreate, ProductInUpdate
+from app.models.schemas.tags import TagsInCreate
 from app.services.filler import fill
 from app.services.text_entities import Parser
+from ..tags import Tags, ProductTags
+
 if TYPE_CHECKING:
 	from ..comments import Comments
 	from ..review import Reviews
@@ -47,12 +51,26 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 		await db.commit()
 
 	@classmethod
+	async def add_tags(cls, db: AsyncSession, tags: List[TagsInCreate], product: Products) -> None:
+		result_tags = []
+		for tag in tags:
+			result_tags.append(fill(tag, ProductTags))
+		product.tags = result_tags
+		db.add(product)
+		await db.flush([product])
+
+	@classmethod
 	async def create(cls, db: AsyncSession, obj_in: ProductInCreate) -> Products:
 		parsed_entities = Parser().parse_entities(obj_in.description)
 		parsed_entities = await TextEntitiesCRUD.create_list(db, parsed_entities, typ=TextEntityProduct)
 		sellers = []
 		for seller in obj_in.sellers:
 			sellers.append(fill(seller, ProductSeller))
-		relations = {"comments": [], "text_entities": parsed_entities, "sellers": sellers}
+		tags = []
+
+		relations = {"comments": [], "text_entities": parsed_entities, "sellers": sellers, "tags": tags}
+		logger.info(relations)
 		product = await ProductsCRUD.create_with_relationship(db, obj_in, **relations)
+
+		await cls.add_tags(db, obj_in.tags, product)
 		return product
