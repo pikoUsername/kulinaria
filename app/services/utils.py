@@ -1,7 +1,9 @@
-from typing import TypeVar, Type, List, Iterable, Dict, Any
+from typing import TypeVar, Type, List, Dict, Any
 
 import sqlalchemy as sa
 from pydantic import BaseModel
+
+from .translate import translate
 
 
 T = TypeVar("T", bound=BaseModel)
@@ -38,3 +40,6 @@ def extract_default_value_from_db_obj(db_obj: ST) -> Dict[str, Any]:
 def remove_default_values_db_obj(db_obj: T) -> T:
 	return db_obj.copy(exclude={"id", "created_at", "updated_at"})
 
+
+def generate_slug_for_category(name: str) -> str:
+	return translate(origin=name)

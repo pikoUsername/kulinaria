@@ -184,7 +184,6 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 			exclude_unset=True,
 			exclude=set(self.detect_sub_models(model))
 		)
-		logger.info(f"Filler data: {data}")
 		db_obj = db_obj(**data, **relations)
 
 		return db_obj

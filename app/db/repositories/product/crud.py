@@ -3,10 +3,13 @@ from typing import TYPE_CHECKING, List
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.schemas.category import CategoryInCreate
 from app.models.schemas.product import ProductInCreate, ProductInUpdate
 from app.models.schemas.tags import TagsInCreate
 from app.services.filler import fill
 from app.services.text_entities import Parser
+from app.services.utils import generate_slug_for_category
+from ..category import CategoryCRUD
 from ..tags import Tags, ProductTags
 
 if TYPE_CHECKING:
@@ -68,8 +71,15 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 			sellers.append(fill(seller, ProductSeller))
 		tags = []
 
-		relations = {"comments": [], "text_entities": parsed_entities, "sellers": sellers, "tags": tags}
+		category = CategoryInCreate(
+			name=obj_in.category,
+			slug=generate_slug_for_category(obj_in.category),
+		)
+		category, _ = await CategoryCRUD.get_or_create(db, category, id_name="name")
+
+		relations = {"comments": [], "text_entities": parsed_entities, "sellers": sellers, "tags": tags, "category": category}
 		logger.info(relations)
+
 		product = await ProductsCRUD.create_with_relationship(db, obj_in, **relations)
 
 		await cls.add_tags(db, obj_in.tags, product)

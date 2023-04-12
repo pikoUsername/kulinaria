@@ -117,10 +117,10 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 			obj_in_data.update(**additional_opts)
 		db_obj = cls.model(**obj_in_data)
 		for key, value in relationships.items():
-			if isinstance(value, (list, tuple, set)) and value:
+			if isinstance(value, (list, tuple, set)) and value is not None:
 				rel = getattr(db_obj, key)
 				for val in value:
-					logger.info(val.__dict__)
+					logger.info(f"{key}: {val.__dict__}")
 					rel.append(val)
 				continue
 			setattr(db_obj, key, value)

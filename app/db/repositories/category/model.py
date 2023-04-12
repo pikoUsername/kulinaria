@@ -12,6 +12,6 @@ if TYPE_CHECKING:
 class Category(TimedModel):
     __tablename__ = "categories"
 
-    name = sa.Column(sa.String(52), nullable=False)
+    name = sa.Column(sa.String(52), primary_key=True)
     slug = sa.Column(sa.String(128))
     products: Mapped[List["Products"]] = relationship(back_populates="category")

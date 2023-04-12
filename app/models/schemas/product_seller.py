@@ -12,10 +12,9 @@ class ProductSellerInResponse(RWSchema):
 
 
 class ProductSellerInCreate(RWSchema):
-    product_id: int
-    seller_id: int
-    description: str
-    name: str
+    description: str = ""
+    name: str = None
     where_name: str
+    price: int
     where: Optional[Tuple[float, float]] = None
     link: str

@@ -15,7 +15,7 @@ class Seller(TimedModel):
 	"""
 	__tablename__ = 'sellers'
 
-	name = sa.Column(sa.String(52))
+	name = sa.Column(sa.String(52), primary_key=True)
 	rating = sa.Column(sa.Float)  # 5 to 1
 	product_seller: Mapped[List["ProductSeller"]] = relationship(back_populates="seller")  # 1:M
 	country = sa.Column(sa.String(125))
@@ -32,7 +32,6 @@ class ProductSeller(TimedModel):
 	seller: Mapped["Seller"] = relationship()
 	description: Mapped[str] = mapped_column()
 	name = sa.Column(sa.String(100), nullable=False)
-	# to setup postgis: https://geoalchemy.readthedocs.io/en/0.5/tutorial.html
 	where = sa.Column(sa.ARRAY(sa.Float))  # limited to 2
 	where_name = sa.Column(sa.String(52))
 	price: Mapped[int] = mapped_column()
