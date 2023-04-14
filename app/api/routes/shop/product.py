@@ -114,6 +114,7 @@ async def update_product(
 	product = await ProductsCRUD.update(db, product, product_body)
 
 	return ProductInResponse(
+		slug=product.slug,
 		name=product.name,
 		description=product.description,
 		seller=convert_db_obj_to_model(product.seller, SellerInDB),
@@ -142,6 +143,7 @@ async def delete_product(
 	logger.info("Product deleted", extra={"product": deleted_product})
 
 	return ProductInResponse(
+		slug=deleted_product.slug,
 		name=deleted_product.name,
 		description=deleted_product.description,
 		seller=convert_db_obj_to_model(deleted_product.seller, SellerInDB),

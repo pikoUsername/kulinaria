@@ -97,6 +97,11 @@ async def _get_current_user(
 			status_code=status.HTTP_403_FORBIDDEN,
 			detail=strings.MALFORMED_PAYLOAD,
 		)
+	if result.is_deactivated:
+		raise HTTPException(
+			status_code=status.HTTP_400_BAD_REQUEST,
+			detail=strings.USER_IS_DEACTIVATED,
+		)
 	return result
 
 

@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
@@ -57,7 +56,7 @@ async def retrieve_current_user(
 	)
 
 
-@router.put("", name="users:update-current-user")
+@router.put("/", name="users:update-current-user")
 async def update_current_user(
 		user_update: UserInUpdate = Body(..., embed=True, alias="user"),
 		current_user: UserPublic = Depends(get_current_user_authorizer()),

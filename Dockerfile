@@ -1,4 +1,4 @@
-FROM python:3.9.10-slim
+FROM python:3.8.1-slim
 
 ENV PYTHONUNBUFFERED 1
 
@@ -11,7 +11,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY poetry.lock pyproject.toml ./
-RUN pip install poetry==1.1 && \
+RUN pip install poetry==1.3.2 && \
     poetry config virtualenvs.in-project true && \
     poetry install --no-dev
 

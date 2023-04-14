@@ -9,13 +9,13 @@ from app.models.common import IDModelMixin, DateTimeModelMixin
 
 if TYPE_CHECKING:
 	from app.models.domain.users import User
-	from app.models.domain.perms import Permissions
+	from app.models.domain.perms import PermissionsInDB
 
 
 class Groups(RWModel):
 	name: str = Field(...)
 	users: List[User] = []
-	permissions: List[Permissions] = []
+	permissions: List[PermissionsInDB] = []
 
 
 class GroupInDB(Groups, IDModelMixin, DateTimeModelMixin):

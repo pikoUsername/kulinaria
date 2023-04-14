@@ -218,12 +218,6 @@ class ModelsFiller(ContextInstanceMixin["ModelsFiller"], ModelsFillerInterface):
 		data = jsonable_encoder(obj_in, exclude_unset=True)
 		return db_type(**data)  # noqa
 
-	def model_field_encoder(self, field: ModelField) -> dict:
-		"""
-		Предполгается что это без field не имеет типо итератора
-		"""
-		pass
-
 
 class _SqlAlchemyDuplicationResolver:
 	"""

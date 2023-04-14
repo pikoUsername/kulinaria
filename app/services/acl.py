@@ -12,7 +12,7 @@ from app.db.repositories.control import CONTROL_LIST
 from app.db.engine import get_meta
 
 
-def create_acl(file: str, session: AsyncSession) -> None:
+async def create_acl(file: str, session: AsyncSession) -> None:
     """
     Этот сервис(да я ебал) запускается перед запуском основного приложения
     И её цель это чтение acl_file-а и сериализации их в Permissions, и Groups моделек
@@ -48,7 +48,7 @@ class _AclValidator:
     """
     Формат:
     {
-        "permissions": {<name>: <code>}
+        "permissions": {<name>: <code>},
         "groups": {<name>: [<permissions.name>]}
     }
 

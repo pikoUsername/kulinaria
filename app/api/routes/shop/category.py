@@ -6,13 +6,14 @@ from app.models.domain import ProductInDB
 from app.models.schemas.category import PaginatedCategoryListResponse
 from app.models.schemas.pagination import PaginationInfo
 from app.db.repositories.category import CategoryCRUD, Category
+from app.models.schemas.search import SearchRequest
 from app.services.utils import convert_list_obj_to_model
 from app.resources import strings
 
-router = APIRouter()
+router = APIRouter(tags=["category"])
 
 
-@router.post("/{category_id}/list", name="get-category-products")
+@router.post("/{category_id}/all", name="category:get-category-products")
 async def get_category_products(
         category_id: int,
         pagination_info: PaginationInfo = Body(..., embed=True, alias="pagination"),
@@ -35,3 +36,13 @@ async def get_category_products(
         result_len=len(products),
         products=convert_list_obj_to_model(products, ProductInDB),
     )
+
+
+@router.post("/{category_id}/search", name="category:search-by-category")
+async def category_search(
+        category_id: int,
+        search_request: SearchRequest = Body(..., alias="search", embed=True),
+        pagination_info: PaginationInfo = Body(..., alias="pagination", embed=True),
+        db: AsyncSession = Depends(get_connection),
+) -> PaginatedCategoryListResponse:
+    pass

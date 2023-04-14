@@ -1,9 +1,9 @@
 import sqlalchemy as sa
 
-from app.db.repositories.base import BaseModel
+from app.db.repositories.base import TimedModel
 
 
-class Permissions(BaseModel):
+class Permissions(TimedModel):
 	"""
 	Все пермишинны будут привязаны к юзеру
 	"""

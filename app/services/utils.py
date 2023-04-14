@@ -21,7 +21,6 @@ def convert_list_obj_to_model(objects: List[ST], model: Type[T]) -> List[T]:
 	models = []
 
 	for obj in objects:
-		logger.info(obj)
 		models.append(model.from_orm(obj))
 
 	return models

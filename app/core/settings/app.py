@@ -24,7 +24,7 @@ class AppSettings(BaseAppSettings):
 
 	redis_password: SecretStr
 	redis_host: str = "localhost"
-	redis_port: int = "6379"
+	redis_port: int = 6379
 
 	secret_key: SecretStr
 

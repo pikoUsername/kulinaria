@@ -5,7 +5,7 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session, async_sessionmaker
 
 
-__all__ = "get_db", "get_meta"
+__all__ = "get_db", "get_meta", "get_current_session"
 
 # here will be some global variables,
 # not intended to be used in routes, use dependencies instead.
@@ -23,6 +23,10 @@ def get_db() -> AsyncSession:
 	:return:
 	"""
 	return Session()
+
+
+def get_current_session() -> async_scoped_session:
+	return current_session
 
 
 def get_meta() -> MetaData:

@@ -17,8 +17,8 @@ First, run ``PostgreSQL``, set environment variables and create database. For ex
 
 Then run the following commands to bootstrap your environment with ``poetry``: ::
 
-    git clone https://github.com/nsidnev/fastapi-realworld-example-app
-    cd fastapi-realworld-example-app
+    git clone https://github.com/pikoUsername/shopify3
+    cd shopify3
     poetry install
     poetry shell
 

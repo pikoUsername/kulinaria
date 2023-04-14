@@ -3,9 +3,9 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.core.settings.app import AppSettings
-from app.db.engine import Session, Meta, current_session
+from app.db.engine import Session, current_session
 from app.db.repositories.groups import GroupsCRUD
-from app.models.domain.perms import Permissions as PubPermissions
+from app.models.schemas.permissions import PermissionInCreate
 from app.services.enums import GlobalGroups, GlobalPermissions
 from app.db.repositories.permissions import PermissionsCrud
 
@@ -41,7 +41,7 @@ async def create_default_permissions(app: FastAPI) -> None:
 	async with app.state.session() as session:
 		async with session.begin():
 			for perm in GlobalPermissions:
-				perm_mdl = PubPermissions(
+				perm_mdl = PermissionInCreate(
 					name=perm.name,
 					code=perm.value,
 				)

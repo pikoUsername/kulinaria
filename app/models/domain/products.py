@@ -3,12 +3,12 @@ from typing import TYPE_CHECKING, List
 
 from pydantic import Field
 
-from .category import CategoryInDB
 from ..common import IDModelMixin, DateTimeModelMixin
 from .rwmodel import RWModel
 
 
 if TYPE_CHECKING:
+	from .category import CategoryInDB
 	from .comments import CommentInDB
 	from .seller import ProductSellerInDB
 	from .tag import TagsInDB

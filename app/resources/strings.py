@@ -13,6 +13,7 @@ UNABLE_TO_FOLLOW_YOURSELF = "user can not follow him self"
 UNABLE_TO_UNSUBSCRIBE_FROM_YOURSELF = "user can not unsubscribe from him self"
 USER_IS_NOT_FOLLOWED = "you don't follow this user"
 USER_IS_ALREADY_FOLLOWED = "you follow this user already"
+USER_IS_DEACTIVATED = "user is deactivated"
 
 WRONG_TOKEN_PREFIX = "unsupported authorization type"  # noqa: S105
 MALFORMED_PAYLOAD = "could not validate credentials"
