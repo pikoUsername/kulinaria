@@ -90,6 +90,8 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 			db.add(model_obj)
 			ret_models.append(model_obj)
 		await db.commit()
+		for obj in ret_models:
+			await db.refresh(obj)
 
 		return ret_models
 
@@ -98,6 +100,7 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 		db_obj = fill(obj_in, cls.model)
 		db.add(db_obj)
 		await db.commit()
+		await db.refresh(db_obj)
 		return db_obj
 
 	@classmethod
@@ -124,8 +127,9 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 					rel.append(val)
 				continue
 			setattr(db_obj, key, value)
-		# db.add(db_obj)
-		await db.flush([db_obj])
+		db.add(db_obj)
+		await db.commit()
+		await db.refresh(db_obj)
 		return db_obj
 
 	@classmethod
@@ -147,6 +151,7 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 				setattr(db_obj, key, field)
 		db.add(db_obj)
 		await db.commit()
+		await db.refresh(db_obj)
 		return db_obj
 
 	@classmethod

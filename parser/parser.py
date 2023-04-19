@@ -71,7 +71,7 @@ class Parser:
                         break
                     logger.info(f"Parsing data url of: {sub_url}")
                     content = await (await self.client.get(self.parent_url + sub_url)).text()
-                    result_ = await self.extract_detailed_info_from_page(content)
+                    result_ = await self.extract_detailed_info_from_page(content, sub_url)
                     result_list.append(result_)
                     j += 1
                 result.extend(result_list)
@@ -99,7 +99,7 @@ class Parser:
 
         return result
 
-    async def extract_detailed_info_from_page(self, content: str) -> ProductData:
+    async def extract_detailed_info_from_page(self, content: str, slug: str) -> ProductData:
         parser = BeautifulSoup(content, "html.parser")
 
         # sub_type_ = parser.find(class_="t2 no-mobile ib h1")
@@ -166,6 +166,7 @@ class Parser:
 
         return ProductData(
             name=name,
+            slug=slug,
             category=category,
             short_description=short_desc or "",
             characteristics=characteristics,

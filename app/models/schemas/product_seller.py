@@ -15,7 +15,7 @@ class ProductSellerInResponse(RWSchema):
 class ProductSellerInCreate(RWSchema):
     description: str = ""
     name: str = None
-    where_name: str
+    where_name: str = ""
     price: int
     where: Optional[Tuple[float, float]] = None
     link: str

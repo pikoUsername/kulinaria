@@ -5,6 +5,8 @@ Shopify3
 
 More modern and relevant examples can be found in other repositories with ``fastapi`` tag on GitHub.
 
+I would recommend you to create directory ``assets/`` to load there a data from parsing an e-katalog
+
 Quickstart
 ----------
 

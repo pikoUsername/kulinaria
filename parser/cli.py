@@ -1,3 +1,4 @@
+import asyncio
 import pathlib
 from typing import Optional
 
@@ -45,5 +46,5 @@ def load_data(file: str, dsn: str) -> None:
     with file.open("r", encoding="utf8") as f:
         if file.suffix != ".csv":
             raise BadParameter("File does not end with .csv suffix")
-        load_content(f, dsn)
+        asyncio.run(load_content(f, dsn))
 

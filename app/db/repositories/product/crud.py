@@ -58,10 +58,8 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 
 	@classmethod
 	async def add_tags(cls, db: AsyncSession, tags: List[TagsInCreate], product: Products) -> None:
-		result_tags = []
 		for tag in tags:
-			result_tags.append(fill(tag, ProductTags))
-		product.tags = result_tags
+			product.tags.append(fill(tag, ProductTags))
 		await db.flush([product])
 
 	@classmethod

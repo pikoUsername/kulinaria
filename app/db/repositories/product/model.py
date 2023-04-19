@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 	from app.db.repositories.review import Reviews
 
 
-
 class Products(TimedModel):
 	__tablename__ = "products"
 
