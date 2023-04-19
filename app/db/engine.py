@@ -11,7 +11,7 @@ __all__ = "get_db", "get_meta", "get_current_session"
 # not intended to be used in routes, use dependencies instead.
 Meta = MetaData()
 Base = declarative_base(metadata=Meta)
-Session = async_sessionmaker(expire_on_commit=True, class_=AsyncSession)  # noqa
+Session = async_sessionmaker(expire_on_commit=False, autoflush=False, class_=AsyncSession)  # noqa
 current_session = async_scoped_session(Session, asyncio.current_task)
 
 

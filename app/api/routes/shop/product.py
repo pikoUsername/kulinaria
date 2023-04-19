@@ -10,6 +10,7 @@ from app.db.repositories.comments import CommentsCRUD
 from app.db.repositories.product import ProductsCRUD, Products
 from app.api.dependencies.authentication import get_current_user_authorizer
 from app.db.repositories.review import ReviewCrud
+from app.db.repositories.seller import ProductSeller
 from app.db.repositories.user import Users, UserCrud
 from app.models.domain import SellerInDB, TextEntitiesInDB, ProductInDB, ProductSellerInDB
 from app.models.domain.text_entities import TextEntityProductInDB
@@ -60,6 +61,24 @@ async def create_product(
 		)
 	product = await ProductsCRUD.create(db, obj_in=product_create)
 
+	sellers = []
+
+	for seller in product.sellers:
+		seller: ProductSeller
+		logger.info(seller.seller.__dict__)
+		sellers.append(
+			ProductSellerInDB(
+				id=seller.id,
+				description=seller.description,
+				seller=seller.seller,
+				name=seller.name,
+				where=seller.wher,
+				where_name=seller.where_name,
+				price=seller.price,
+				link=seller.link
+			)
+		)
+
 	return ProductInResponse(
 		slug=product.slug,
 		name=product.name,
@@ -107,7 +126,7 @@ async def update_product(
 	product = await ProductsCRUD.get(db, product_id)
 	if not product:
 		raise HTTPException(
-			detail=strings.DOES_NOT_EXISTS.format(model=Products.__tablename__),
+			detail=strings.DOES_NOT_EXISTS.format(model=Products.__tablename__, id=product_id),
 			status_code=400,
 		)
 

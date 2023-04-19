@@ -130,6 +130,7 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 		db.add(db_obj)
 		await db.commit()
 		await db.refresh(db_obj)
+
 		return db_obj
 
 	@classmethod
@@ -137,19 +138,14 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 			cls,
 			db: AsyncSession,
 			db_obj: ModelType,
-			obj_in: Union[UpdateSchemaType, Dict[str, Any]]
+			obj_in: UpdateSchemaType
 	) -> ModelType:
 		logger.info(
 			f"Changed object: {cls.model.__tablename__}")
-		obj_data = jsonable_encoder(db_obj)
-		if isinstance(obj_in, dict):
-			update_data = obj_in
-		else:
-			update_data = obj_in.dict(exclude_unset=True)
-		for key, field in obj_data.items():
-			if key in update_data:
-				setattr(db_obj, key, field)
-		db.add(db_obj)
+		for key, value in obj_in.dict(exclude={"id"}).items():
+			if hasattr(db_obj, key):
+				setattr(db_obj, key, value)
+
 		await db.commit()
 		await db.refresh(db_obj)
 		return db_obj
@@ -159,7 +155,7 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 		logger.info(
 			f"Removed object: {cls.model.__tablename__} from database data.")
 
-		obj = await db.get(cls.model, id)
+		obj = await cls.get(db, id)
 		await db.delete(obj)
 		await db.commit()
 		return obj

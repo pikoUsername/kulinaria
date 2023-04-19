@@ -15,6 +15,8 @@ class TimedModel(BaseModel):
 	created_at = sa.Column(sa.DateTime, server_default=sa.func.now())
 	updated_at = sa.Column(sa.DateTime, onupdate=sa.func.now())
 
+	__mapper_args__ = {"eager_defaults": True}
+
 
 class TestBaseModel(BaseModel):
 	__abstract__ = True

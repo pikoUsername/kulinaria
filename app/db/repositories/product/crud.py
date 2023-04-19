@@ -20,8 +20,9 @@ from .model import Products
 if TYPE_CHECKING:
 	from ..comments import Comments
 	from ..review import Reviews
-	from ..text_entities import TextEntityProduct, TextEntitiesCRUD
-	from ..seller import ProductSeller
+
+from ..seller import ProductSeller
+from ..text_entities import TextEntityProduct, TextEntitiesCRUD
 
 
 class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
@@ -61,6 +62,7 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 		for tag in tags:
 			product.tags.append(fill(tag, ProductTags))
 		await db.flush([product])
+		await db.refresh(product)
 
 	@classmethod
 	async def create(cls, db: AsyncSession, obj_in: ProductInCreate) -> Products:
@@ -78,7 +80,6 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 		category, _ = await CategoryCRUD.get_or_create(db, category, id_name="name")
 
 		relations = {"comments": [], "text_entities": parsed_entities, "sellers": sellers, "tags": tags, "category": category}
-		logger.info(relations)
 
 		product = await ProductsCRUD.create_with_relationship(db, obj_in, **relations)
 

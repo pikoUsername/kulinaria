@@ -17,7 +17,7 @@ class Products(TimedModel):
 
 	name = sa.Column(sa.String(92), nullable=False)
 	slug = sa.Column(sa.String(126), primary_key=True)  # used in URI
-	sellers: Mapped[List["ProductSeller"]] = relationship(lazy='selectin')  # 1:M
+	sellers: Mapped[List["ProductSeller"]] = relationship(lazy='selectin', back_populates="product")  # 1:M
 	comments: Mapped[List["Comments"]] = relationship(lazy='selectin')  # 1:many
 	tags: Mapped[List["ProductTags"]] = relationship(lazy='selectin')  # 1:many
 	product_lists: Mapped[List["ProductLists"]] = relationship(secondary=ListsToProducts, lazy='selectin', back_populates="products")

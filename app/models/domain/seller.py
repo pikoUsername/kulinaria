@@ -7,7 +7,7 @@ from .rwmodel import RWModel
 from ..common import DateTimeModelMixin, IDModelMixin
 
 
-class ProductSellerInDB(RWModel, DateTimeModelMixin):
+class ProductSellerInDB(RWModel, IDModelMixin, DateTimeModelMixin):
 	seller: Optional[SellerInDB] = None
 	description: str
 	name: str = Field(..., max_length=52)
