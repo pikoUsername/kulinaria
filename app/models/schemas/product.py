@@ -3,7 +3,7 @@ from typing import List, Optional
 from .product_seller import ProductSellerInCreate
 from .rwschema import RWSchema
 
-from app.models.domain import CommentInDB
+from app.models.domain import CommentInDB, ProductInDB
 from app.models.domain import SellerInDB
 from app.models.domain import TagsInDB
 from app.models.domain import TextEntitiesInDB
@@ -41,3 +41,8 @@ class ProductInUpdate(RWSchema):
 	text_entities: List[TextEntitiesInDB] = []
 	comments: List[CommentInDB] = []
 	is_hidden: Optional[bool] = None
+
+
+class ProductListsInResponse(RWSchema):
+	products: List[ProductInDB]
+	size: int

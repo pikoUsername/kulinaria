@@ -1,27 +1,27 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, cast
 
 from loguru import logger
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.models.schemas.category import CategoryInCreate
+from app.models.schemas.pagination import PaginationInfo
 from app.models.schemas.product import ProductInCreate, ProductInUpdate
-from app.models.schemas.seller import SellerInCreate
+from app.models.schemas.search import SearchRequest
 from app.models.schemas.tags import TagsInCreate
 from app.services.filler import fill
 from app.services.text_entities import Parser
 from app.services.utils import generate_slug_for_category
 from ..category import CategoryCRUD
-from ..tags import Tags, ProductTags
+from ..tags import ProductTags
+from ..common import BaseCrud
+from .model import Products
 
 if TYPE_CHECKING:
 	from ..comments import Comments
 	from ..review import Reviews
-from ..common import BaseCrud
-from .model import Products
-from ..seller import ProductSeller, SellerCRUD
-from ..text_entities import TextEntityProduct, TextEntitiesCRUD
+	from ..text_entities import TextEntityProduct, TextEntitiesCRUD
+	from ..seller import ProductSeller
 
 
 class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
@@ -84,3 +84,37 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 
 		await cls.add_tags(db, obj_in.tags, product)
 		return product
+
+	@classmethod
+	async def search(cls, db: AsyncSession, search_request: SearchRequest, pagination_info: PaginationInfo = None) -> List[Products]:
+		request = []
+		if search_request.name:
+			request.append(Products.name.match(search_request.name))
+			request.append(Products.description.match(search_request.name))
+		if search_request.price_base and search_request.price_end:
+			request.extend(
+				(
+					ProductSeller.product_id == Products.id,
+					search_request.price_base <= ProductSeller.price,
+					ProductSeller.price <= search_request.price_end,
+				)
+			)
+		if search_request.category:
+			request.append(
+				Products.category.name
+			)
+		if search_request.rating:
+			request.append(
+				Products.rating >= search_request.rating,
+			)
+
+		stmt = select(Products).where(
+			*request
+		).limit(
+			pagination_info.for_page
+		).offset(
+			pagination_info.current_index * pagination_info.for_page
+		)
+
+		results = await db.execute(stmt)
+		return cast(List[Products], results.all())

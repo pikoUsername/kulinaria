@@ -36,13 +36,3 @@ async def get_category_products(
         result_len=len(products),
         products=convert_list_obj_to_model(products, ProductInDB),
     )
-
-
-@router.post("/{category_id}/search", name="category:search-by-category")
-async def category_search(
-        category_id: int,
-        search_request: SearchRequest = Body(..., alias="search", embed=True),
-        pagination_info: PaginationInfo = Body(..., alias="pagination", embed=True),
-        db: AsyncSession = Depends(get_connection),
-) -> PaginatedCategoryListResponse:
-    pass
