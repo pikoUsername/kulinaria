@@ -10,9 +10,13 @@ from bs4 import BeautifulSoup
 
 from .schema import SellerData, ProductData
 from .consts import TEST_PARSING_URLS, SEPARATOR, VALUE_SEP, URL_REGEX
+from .utils import avg_rating
 
 
 class Parser:
+    """
+    Предупреждение ГОВНОКОД
+    """
     def __init__(
             self,
             file: str,
@@ -60,9 +64,9 @@ class Parser:
                 if j > self.limit:
                     logger.info("Reached limit for base url!!")
                     break
-                content = await (await self.client.get(url + f"{i}/")).text()
+                content_category = await (await self.client.get(url + f"{i}/")).text()
                 # она будет заниматся и переходом на другие страницы
-                urls = self.get_product_links(content)
+                urls = self.get_product_links(content_category)
                 result_list = []
                 # боже, тройной for!
                 for sub_url in urls:
@@ -71,7 +75,8 @@ class Parser:
                         break
                     logger.info(f"Parsing data url of: {sub_url}")
                     content = await (await self.client.get(self.parent_url + sub_url)).text()
-                    result_ = await self.extract_detailed_info_from_page(content, sub_url)
+                    rating = self.extract_rating_from_short_info(content_category, sub_url)
+                    result_ = await self.extract_detailed_info_from_page(content, sub_url, rating)
                     result_list.append(result_)
                     j += 1
                 result.extend(result_list)
@@ -89,6 +94,29 @@ class Parser:
                 # нужно тестирование
                 writer.writerow(value.dict().values())
 
+    def extract_rating_from_short_info(self, content_category: str, sub_url: str) -> float:
+        parser = BeautifulSoup(content_category, "html.parser")
+
+        short_infos = parser.find_all(class_="model-short-info")
+        for info in short_infos:
+            td = info.find("td")
+            a = td.find("a")
+            link = a.href
+            if link == sub_url:
+                rating_text = info.find(class_="short-opinion-icons")
+                if not rating_text:
+                    continue
+                bad_face = rating_text.find(class_="small-faces l-f-1")
+                bad_rating = int(bad_face.sub.get_text())
+                neutral_face = rating_text.find(class_="small-faces l-f-2")
+                neutral_rating = int(neutral_face.sub.get_text())
+                good_face = rating_text.find(class_="small-faces l-f-3")
+                good_rating = int(good_face.sub.get_text())
+                great_face = rating_text.find(class_="small-faces l-f-4")
+                great_rating = int(great_face.sub.get_text())
+                avg = avg_rating(bad_rating, neutral_rating, good_rating, great_rating)
+                return avg
+
     def extract_pages_count(self, content: str) -> int:
         parser = BeautifulSoup(content, "html.parser")
 
@@ -99,7 +127,7 @@ class Parser:
 
         return result
 
-    async def extract_detailed_info_from_page(self, content: str, slug: str) -> ProductData:
+    async def extract_detailed_info_from_page(self, content: str, slug: str, rating: Optional[float] = None) -> ProductData:
         parser = BeautifulSoup(content, "html.parser")
 
         # sub_type_ = parser.find(class_="t2 no-mobile ib h1")
@@ -167,6 +195,7 @@ class Parser:
         return ProductData(
             name=name,
             slug=slug,
+            rating=rating,
             category=category,
             short_description=short_desc or "",
             characteristics=characteristics,

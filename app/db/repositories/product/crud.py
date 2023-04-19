@@ -12,7 +12,7 @@ from app.models.schemas.tags import TagsInCreate
 from app.services.filler import fill
 from app.services.text_entities import Parser
 from app.services.utils import generate_slug_for_category
-from ..category import CategoryCRUD
+from ..category import CategoryCRUD, Category
 from ..tags import ProductTags
 from ..common import BaseCrud
 from .model import Products
@@ -119,3 +119,14 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 
 		results = await db.execute(stmt)
 		return cast(List[Products], results.all())
+
+	@classmethod
+	async def random(cls, db: AsyncSession, limit: int, category: str = None) -> List[Products]:
+		stmt = select(Products)
+		if category:
+			stmt = stmt.where(Category.name == category)
+		stmt = stmt.order_by(func.random()).limit(limit)
+		result = await db.execute(stmt)
+		results = cast(List[Products], result.scalars())
+
+		return results.all()

@@ -17,7 +17,7 @@ from app.models.domain.text_entities import TextEntityProductInDB
 from app.models.schemas.base import BoolResponse
 from app.models.schemas.cart import CartListInResponse
 from app.models.schemas.comment import CommentInCreate, CommentInResponse
-from app.models.schemas.product import ProductInResponse, ProductInCreate, ProductInUpdate
+from app.models.schemas.product import ProductInResponse, ProductInCreate, ProductInUpdate, ProductListsInResponse
 from app.models.schemas.product_seller import ProductSellerInResponse
 from app.models.schemas.review import ReviewInCreate
 from app.resources import strings
@@ -70,6 +70,7 @@ async def create_product(
 			ProductSellerInDB(
 				id=seller.id,
 				description=seller.description,
+				# what the hell??? why does it keep producing bugs?
 				seller=seller.seller,
 				name=seller.name,
 				where=seller.wher,
@@ -84,7 +85,7 @@ async def create_product(
 		name=product.name,
 		rating=product.rating,
 		description=product.description,
-		sellers=convert_list_obj_to_model(product.sellers, ProductSellerInDB),
+		sellers=sellers,
 		text_entities=convert_list_obj_to_model(product.text_entities, TextEntityProductInDB),
 	)
 
@@ -296,4 +297,21 @@ async def add_favourite(
 		)
 	await UserCrud.add_product_cart(db, user, product)
 	return BoolResponse(ok=True)
+
+
+@router.get(
+	"/random",
+	name="product:random"
+)
+async def random_products(
+		limit: int,
+		db: AsyncSession = Depends(get_connection),
+) -> ProductListsInResponse:
+	products = await ProductsCRUD.random(db, limit)
+	if products:
+		return ProductListsInResponse(products=[], size=0)
+	return ProductListsInResponse(
+		products=products,
+		size=len(products)
+	)
 

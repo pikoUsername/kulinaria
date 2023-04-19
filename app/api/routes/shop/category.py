@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, Body, HTTPException
+from fastapi import APIRouter, Depends, Body, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.database import get_connection
+from app.db.repositories.product import ProductsCRUD
 from app.models.domain import ProductInDB
 from app.models.schemas.base import BoolResponse
 from app.models.schemas.category import PaginatedCategoryListResponse
 from app.models.schemas.pagination import PaginationInfo
 from app.db.repositories.category import CategoryCRUD, Category
+from app.models.schemas.product import ProductListsInResponse
 from app.models.schemas.search import SearchRequest
 from app.services.utils import convert_list_obj_to_model
 from app.resources import strings
@@ -44,4 +46,19 @@ async def get_category_products(
         for_page=pagination_info.for_page,
         result_len=len(products),
         products=convert_list_obj_to_model(products, ProductInDB),
+    )
+
+
+@router.post("/{category_id}/random", name="category:random")
+async def select_random_products_by_category(
+        category_id: int,
+        limit: int = Query(default=20),
+        db: AsyncSession = Depends(get_connection)
+) -> ProductListsInResponse:
+    category = await CategoryCRUD.get(db, category_id)
+    products = await ProductsCRUD.random(db, limit=limit, category=category.name)
+
+    return ProductListsInResponse(
+        products=convert_list_obj_to_model(products, ProductInDB),
+        size=limit,
     )

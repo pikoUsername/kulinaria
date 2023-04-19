@@ -10,7 +10,7 @@ from ..common import DateTimeModelMixin, IDModelMixin
 class ProductSellerInDB(RWModel, IDModelMixin, DateTimeModelMixin):
 	seller: Optional[SellerInDB] = None
 	description: str
-	name: str = Field(..., max_length=52)
+	name: str = Field(..., max_length=200)
 	where: Optional[Tuple[float, float]] = None
 	where_name: Optional[str] = Field(..., max_length=100)
 	price: int

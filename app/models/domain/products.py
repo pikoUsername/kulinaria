@@ -17,10 +17,13 @@ if TYPE_CHECKING:
 
 class ProductInDB(IDModelMixin, DateTimeModelMixin, RWModel):
 	name: str = Field(max_length=92)
+	slug: str = Field(max_length=126)
 	sellers: List[ProductSellerInDB] = []
 	comments: List[CommentInDB] = []
 	tags: List[TagsInDB] = []
+	rating: float = .0
 	category: CategoryInDB = None
 	watches: int = 0
 	description: str = ""
 	text_entities: List[TextEntitiesInDB] = []
+	is_hidden: bool = False

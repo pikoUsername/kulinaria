@@ -41,6 +41,8 @@ def parse_data(file: str, url_file: Optional[str] = None):
 @click.option('--dsn', type=str)
 def load_data(file: str, dsn: str) -> None:
     from .loader import load_content
+    if not dsn:
+        raise BadParameter("No dsn")
 
     file = pathlib.Path(file)
     with file.open("r", encoding="utf8") as f:

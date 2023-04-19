@@ -21,4 +21,5 @@ class ProductData(BaseModel):
     short_description: Optional[str] = ""
     characteristics: str  # они могут быть ОЧЕНЬ разными!  разделитель \n
     tags: List[str]
+    rating: Optional[float] = None
     sellers: List[SellerData]

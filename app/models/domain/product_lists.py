@@ -11,5 +11,5 @@ if TYPE_CHECKING:
 
 
 class ProductListInDB(RWModel, IDModelMixin, DateTimeModelMixin):
-	name: str = Field(max_length=52)
+	name: str = Field(max_length=100)
 	products: List[ProductInDB] = []
