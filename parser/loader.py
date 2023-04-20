@@ -89,8 +89,9 @@ def parse_data(file: IO) -> List[ProductData]:
         product_data = {}
 
         for j, attribute in enumerate(row):
+            json_attribute = attribute.replace("'", '"')
             try:
-                data = json.loads(attribute)
+                data = json.loads(json_attribute)
             except json.JSONDecodeError:
                 try:
                     # это ОЧЧЧЕНЬ плохо, по другому я не знаю как
@@ -99,6 +100,11 @@ def parse_data(file: IO) -> List[ProductData]:
                     data = attribute
 
             product_data[header[j]] = data
+
+        for key, value in product_data.items():
+            if isinstance(value, float):
+                if value == -1:
+                    product_data[key] = None
 
         product_data = ProductData(**product_data)
         result.append(product_data)

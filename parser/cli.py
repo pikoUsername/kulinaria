@@ -20,10 +20,10 @@ def cli():
 @cli.command()
 @click.option('--file', default=DEFAULT_FILE, type=str)
 @click.option('--url-file', default=None, type=str)
-def parse_data(file: str, url_file: Optional[str] = None):
+@click.option('--limit', "-l", default=5, type=int)
+def parse_data(file: str, url_file: Optional[str] = None, limit: int = 5):
     path = pathlib.Path(file).parent
     if path.parent != pathlib.Path(""):
-        logger.info("HERE")
         path.parent.mkdir(exist_ok=True)
     if url_file:
         with open(url_file, "r", encoding="utf8") as file:
@@ -33,7 +33,7 @@ def parse_data(file: str, url_file: Optional[str] = None):
         urls = TEST_PARSING_URLS
 
     # все очень плохо 
-    parser_parse_data(urls, file)
+    parser_parse_data(urls, file, limit=limit)
 
 
 @cli.command()

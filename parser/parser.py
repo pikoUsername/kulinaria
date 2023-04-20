@@ -101,20 +101,22 @@ class Parser:
         for info in short_infos:
             td = info.find("td")
             a = td.find("a")
-            link = a.href
+            link = a['href']
             if link == sub_url:
                 rating_text = info.find(class_="short-opinion-icons")
-                if not rating_text:
-                    continue
-                bad_face = rating_text.find(class_="small-faces l-f-1")
+                if not rating_text.get_text():
+                    return -1.0
+                bad_face = rating_text.find(class_="l-f-1")
                 bad_rating = int(bad_face.sub.get_text())
-                neutral_face = rating_text.find(class_="small-faces l-f-2")
+                neutral_face = rating_text.find(class_="l-f-2")
                 neutral_rating = int(neutral_face.sub.get_text())
-                good_face = rating_text.find(class_="small-faces l-f-3")
+                good_face = rating_text.find(class_="l-f-3")
                 good_rating = int(good_face.sub.get_text())
-                great_face = rating_text.find(class_="small-faces l-f-4")
+                great_face = rating_text.find(class_="l-f-4")
                 great_rating = int(great_face.sub.get_text())
+                logger.info(f"{(bad_rating, neutral_rating, good_rating, great_rating)}")
                 avg = avg_rating(bad_rating, neutral_rating, good_rating, great_rating)
+                logger.info(f"Avg rating: {avg}")
                 return avg
 
     def extract_pages_count(self, content: str) -> int:
@@ -285,13 +287,13 @@ class Parser:
         await self.client.close()
 
 
-def parse_data(urls: Dict[str, str], file: str) -> None:
+def parse_data(urls: Dict[str, str], file: str, limit: int) -> None:
     """
     Парсится дата с е-каталога
     """
     loop = asyncio.get_event_loop()
 
-    parser = Parser(file, urls=urls)
+    parser = Parser(file, urls=urls, limit=limit)
     try:
         data = loop.run_until_complete(parser.get_data())
         logger.info(f"Parser data: {data}")
