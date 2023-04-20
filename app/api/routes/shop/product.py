@@ -35,7 +35,7 @@ async def get_cart(
 	user: Users = Depends(get_current_user_authorizer(required=True)),
 	db: AsyncSession = Depends(get_connection),
 ) -> CartListInResponse:
-	products = await UserCrud.get_cart(db, user)
+	products = await UserCrud.get_cart(user)
 	result_products = convert_list_obj_to_model(products, ProductInResponse)
 	return CartListInResponse(
 		products=result_products,
@@ -64,8 +64,8 @@ async def create_product(
 	sellers = []
 
 	for seller in product.sellers:
+		await db.refresh(seller)
 		seller: ProductSeller
-		logger.info(seller.seller.__dict__)
 		sellers.append(
 			ProductSellerInDB(
 				id=seller.id,
@@ -73,7 +73,7 @@ async def create_product(
 				# what the hell??? why does it keep producing bugs?
 				seller=seller.seller,
 				name=seller.name,
-				where=seller.wher,
+				where=seller.where,
 				where_name=seller.where_name,
 				price=seller.price,
 				link=seller.link

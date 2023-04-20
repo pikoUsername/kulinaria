@@ -1,6 +1,7 @@
 from typing import Optional, List
 
 import sqlalchemy as sa
+from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -88,17 +89,13 @@ class UserCrud(BaseCrud[Users, UserInCreate, UserInUpdate]):
 
 	@classmethod
 	async def add_product_cart(cls, db: AsyncSession, user: Users, product: Products) -> None:
-		user.cart.products.append(product)
-		await db.flush([user])
+		cart = await ProductListCrud.get_by_kwargs(db, user_id=user.id)
+		await ProductListCrud.add_products(db, cart, product)
+		await db.flush([cart])
 
 	@classmethod
-	async def get_cart(cls, db: AsyncSession, user: Users) -> List[Products]:
-		stmt = select(Products).where(
-			ProductLists.id == user.cart.id
-		)
-		result = await db.scalars(stmt)
-		result = result.all()
-		return result
+	async def get_cart(cls, user: Users) -> List[Products]:
+		return user.cart.products
 
 	@classmethod
 	async def set_admin(cls, db: AsyncSession, user: Users, is_admin: bool = False) -> None:

@@ -26,7 +26,7 @@ class Seller(TimedModel):
 class ProductSeller(TimedModel):
 	__tablename__ = 'product_sellers'
 
-	product: Mapped["Products"] = relationship()
+	product: Mapped["Products"] = relationship(cascade="delete", single_parent=True)
 	product_id: Mapped[int] = mapped_column(sa.ForeignKey('products.id'))
 	seller_id: Mapped[Optional[int]] = mapped_column(sa.ForeignKey('sellers.id'))
 	seller: Mapped[Optional["Seller"]] = relationship(lazy='selectin')

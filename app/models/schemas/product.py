@@ -4,15 +4,15 @@ from .product_seller import ProductSellerInCreate
 from .rwschema import RWSchema
 
 from app.models.domain import CommentInDB, ProductInDB
-from app.models.domain import SellerInDB
 from app.models.domain import TagsInDB
 from app.models.domain import TextEntitiesInDB
 from app.models.domain import ReviewInDB
 from .tags import TagsInCreate
+from ..common import IDModelMixin
 from ..domain.seller import ProductSellerInDB
 
 
-class ProductInResponse(RWSchema):
+class ProductInResponse(RWSchema, IDModelMixin):
 	name: str
 	slug: str
 	sellers: List[ProductSellerInDB] = []

@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar, List, Union, Dict, Any, Optional, Tuple, Sequence, Type
+from typing import Generic, TypeVar, List, Union, Dict, Any, Optional, Tuple, Sequence, Type, cast
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
@@ -26,6 +26,14 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
 	"""
 	model: Type[sa.Table]
+
+	@classmethod
+	async def get_multi(cls, db: AsyncSession, limit: int = None) -> List[ModelType]:
+		stmt = sa.select(cls.model)
+		if limit:
+			stmt.limit(limit)
+		result = await db.scalars(stmt)
+		return cast(List[ModelType], result.all())
 
 	@classmethod
 	async def get(cls, db: AsyncSession, id: Any) -> Optional[ModelType]:
@@ -156,6 +164,7 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 			f"Removed object: {cls.model.__tablename__} from database data.")
 
 		obj = await cls.get(db, id)
+		logger.info(obj.__dict__)
 		await db.delete(obj)
 		await db.commit()
 		return obj

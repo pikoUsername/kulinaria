@@ -14,4 +14,5 @@ class Category(TimedModel):
 
     name = sa.Column(sa.String(52), primary_key=True)
     slug = sa.Column(sa.String(128))
+    # dont change lazy=selectin, otherwise it will load hundreds of products
     products: Mapped[List["Products"]] = relationship(back_populates="category")

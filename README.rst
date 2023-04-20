@@ -17,6 +17,8 @@ First, run ``PostgreSQL``, set environment variables and create database. For ex
     export POSTGRES_HOST=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' pgdb)
     createdb --host=$POSTGRES_HOST --port=$POSTGRES_PORT --username=$POSTGRES_USER $POSTGRES_DB
 
+Second, run and configure elasticsearch for search bar. See: elasticsearch install tutorial.
+
 Then run the following commands to bootstrap your environment with ``poetry``: ::
 
     git clone https://github.com/pikoUsername/shopify3

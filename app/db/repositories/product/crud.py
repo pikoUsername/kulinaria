@@ -102,7 +102,7 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 			)
 		if search_request.category:
 			request.append(
-				Products.category.name
+				Category.name.match(search_request.category)
 			)
 		if search_request.rating:
 			request.append(
@@ -116,8 +116,10 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 		).offset(
 			pagination_info.current_index * pagination_info.for_page
 		)
+		logger.info(stmt)
 
 		results = await db.execute(stmt)
+		results = results.scalars()
 		return cast(List[Products], results.all())
 
 	@classmethod
