@@ -18,6 +18,9 @@ async def search_products(
         pagination_info: PaginationInfo = Body(..., alias="pagination", embed=True),
         db: AsyncSession = Depends(get_connection),
 ) -> ProductListsInResponse:
+    """
+    Attempt to use search engines, particulary ElasticSearch
+    """
     results = await ProductsCRUD.search(db, search_request, pagination_info)
     return ProductListsInResponse(
         products=convert_list_obj_to_model(results, ProductInDB),
