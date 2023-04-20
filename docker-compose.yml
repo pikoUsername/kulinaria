@@ -7,15 +7,18 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: "postgresql://postgres:postgres@db/postgres"
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5431/postgres"
     env_file:
       - .env
     depends_on:
       - db
   db:
     image: postgres:11.5-alpine
+    expose:
+      - "5431" # Publishes 5431 to other containers but NOT to host machine
     ports:
-      - "5432:5432"
+      - "5431:5431"  # unwanted conflict with database in main pc
+    command: -p 5431
     env_file:
       - .env
     volumes:
