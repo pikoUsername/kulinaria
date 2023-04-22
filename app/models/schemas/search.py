@@ -4,7 +4,7 @@ from .rwschema import RWSchema
 
 
 class SearchRequest(RWSchema):
-    name: Optional[str] = ""
+    request_str: Optional[str] = ""
     price_base: Optional[int] = None
     price_end: Optional[int] = None
     rating: Optional[int] = None

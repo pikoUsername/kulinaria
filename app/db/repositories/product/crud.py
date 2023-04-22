@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING, List, cast
 
 from loguru import logger
-from sqlalchemy import select, func
+from sqlalchemy import select, func, cast as sql_cast
+from sqlalchemy.dialects.postgresql import TSVECTOR, TSQUERY
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.schemas.category import CategoryInCreate
@@ -61,7 +62,9 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 	async def add_tags(cls, db: AsyncSession, tags: List[TagsInCreate], product: Products) -> None:
 		for tag in tags:
 			product.tags.append(fill(tag, ProductTags))
-		await db.flush([product])
+		logger.info(f"Created tags: {product.tags}")
+		db.add(product)
+		await db.commit()
 		await db.refresh(product)
 
 	@classmethod
@@ -72,6 +75,10 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 		for seller in obj_in.sellers:
 			sellers.append(fill(seller, ProductSeller))
 		tags = []
+		for tag in obj_in.tags:
+			tags.append(fill(tag, ProductTags))
+
+		logger.info(f"db tags: {tags}")
 
 		category = CategoryInCreate(
 			name=obj_in.category,
@@ -83,15 +90,16 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 
 		product = await ProductsCRUD.create_with_relationship(db, obj_in, **relations)
 
-		await cls.add_tags(db, obj_in.tags, product)
 		return product
 
 	@classmethod
 	async def search(cls, db: AsyncSession, search_request: SearchRequest, pagination_info: PaginationInfo = None) -> List[Products]:
 		request = []
-		if search_request.name:
-			request.append(Products.name.match(search_request.name))
-			request.append(Products.description.match(search_request.name))
+		if search_request.request_str:
+			request.append(
+				Products.ts_vector.bool_op("@@")
+				(func.to_tsquery(search_request.request_str))
+			)
 		if search_request.price_base and search_request.price_end:
 			request.extend(
 				(
@@ -101,22 +109,31 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 				)
 			)
 		if search_request.category:
-			request.append(
-				Category.name.match(search_request.category)
+			request.extend(
+				(
+					Products.category_id == Category.id,
+					Category.ts_vector.match(search_request.category),
+				)
 			)
 		if search_request.rating:
 			request.append(
 				Products.rating >= search_request.rating,
 			)
+		if search_request.tags:
+			request.extend(
+				(
+					ProductTags.product_id == Products.id,
+					ProductTags.ts_vector.bool_op("@@")(" | ".join(search_request.tags))
+				)
+			)
 
 		stmt = select(Products).where(
 			*request
-		).limit(
+		).join(ProductSeller).join(Category).join(ProductTags).limit(
 			pagination_info.for_page
 		).offset(
 			pagination_info.current_index * pagination_info.for_page
 		)
-		logger.info(stmt)
 
 		results = await db.execute(stmt)
 		results = results.scalars()
@@ -129,6 +146,6 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 			stmt = stmt.where(Category.name == category)
 		stmt = stmt.order_by(func.random()).limit(limit)
 		result = await db.execute(stmt)
-		results = cast(List[Products], result.scalars())
+		results = cast(List[Products], result.scalars().all())
 
-		return results.all()
+		return results

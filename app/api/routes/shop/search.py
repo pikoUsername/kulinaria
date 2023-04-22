@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends, Body, HTTPException
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.database import get_connection

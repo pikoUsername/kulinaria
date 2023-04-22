@@ -11,6 +11,7 @@ from app.db.repositories.product import ProductsCRUD, Products
 from app.api.dependencies.authentication import get_current_user_authorizer
 from app.db.repositories.review import ReviewCrud
 from app.db.repositories.seller import ProductSeller
+from app.db.repositories.tags import ProductTags
 from app.db.repositories.user import Users, UserCrud
 from app.models.domain import SellerInDB, TextEntitiesInDB, ProductInDB, ProductSellerInDB
 from app.models.domain.text_entities import TextEntityProductInDB
@@ -81,6 +82,7 @@ async def create_product(
 		)
 
 	return ProductInResponse(
+		id=product.id,
 		slug=product.slug,
 		name=product.name,
 		rating=product.rating,
@@ -105,13 +107,7 @@ async def get_product(
 			status_code=400,
 		)
 
-	return ProductInResponse(
-		slug=product.slug,
-		name=product.name,
-		description=product.description,
-		sellers=convert_list_obj_to_model(product.sellers, ProductSellerInDB),
-		text_entities=product.text_entities,
-	)
+	return ProductInResponse.from_orm(product)
 
 
 @router.put(
@@ -133,13 +129,7 @@ async def update_product(
 
 	product = await ProductsCRUD.update(db, product, product_body)
 
-	return ProductInResponse(
-		slug=product.slug,
-		name=product.name,
-		description=product.description,
-		seller=convert_db_obj_to_model(product.seller, SellerInDB),
-		text_entities=product.text_entities
-	)
+	return ProductInResponse.from_orm(product)
 
 
 @router.delete(
@@ -162,13 +152,7 @@ async def delete_product(
 	deleted_product = await ProductsCRUD.delete(db, product_id)
 	logger.info("Product deleted", extra={"product": deleted_product})
 
-	return ProductInResponse(
-		slug=deleted_product.slug,
-		name=deleted_product.name,
-		description=deleted_product.description,
-		seller=convert_db_obj_to_model(deleted_product.seller, SellerInDB),
-		text_entities=convert_list_obj_to_model(deleted_product.text_entities, TextEntitiesInDB),
-	)
+	return ProductInResponse.from_orm(deleted_product)
 
 
 @router.post(

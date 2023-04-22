@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from pydantic import Field
 
@@ -21,8 +21,8 @@ class ProductInDB(IDModelMixin, DateTimeModelMixin, RWModel):
 	sellers: List[ProductSellerInDB] = []
 	comments: List[CommentInDB] = []
 	tags: List[TagsInDB] = []
-	rating: float = .0
-	category: CategoryInDB = None
+	rating: Optional[float] = Field(default=0.0)
+	category: Optional[CategoryInDB] = None
 	watches: int = 0
 	description: str = ""
 	text_entities: List[TextEntitiesInDB] = []

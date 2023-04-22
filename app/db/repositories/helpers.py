@@ -1,4 +1,6 @@
 import sqlalchemy as sa
+from sqlalchemy import func
+from sqlalchemy.dialects.postgresql import TSVECTOR
 
 from app.db.engine import Meta
 
@@ -46,3 +48,16 @@ def get_tables():
 			tables[value.__tablename__] = value
 
 	return tables
+
+
+class TSVector(sa.types.TypeDecorator):
+	impl = TSVECTOR
+	cache_ok = True
+
+
+def create_tsvector(*args):
+	exp = args[0]
+	for e in args[1:]:
+		exp += ' ' + e
+	stmt = func.to_tsvector("russian", exp)
+	return stmt

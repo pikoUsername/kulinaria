@@ -18,6 +18,10 @@ def convert_db_obj_to_model(db_obj: ST, model: Type[T]) -> T:
 
 
 def convert_list_obj_to_model(objects: List[ST], model: Type[T]) -> List[T]:
+	# fixed bug
+	if not objects:
+		return []
+
 	models = []
 
 	for obj in objects:
