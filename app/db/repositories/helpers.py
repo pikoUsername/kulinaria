@@ -1,3 +1,5 @@
+from functools import cache
+
 import sqlalchemy as sa
 from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import TSVECTOR
@@ -28,12 +30,10 @@ PermissionsToGroups = sa.Table(
 )
 
 
+@cache
 def get_tables():
 	"""
 	Дает все таблицы которые определены в models.py
-
-	Очень тупое, глупое, даже наивное решение
-	Но я не нашел другого пути достать конструктор таблиц
 
 	:return:
 	"""
