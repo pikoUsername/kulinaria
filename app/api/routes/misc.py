@@ -12,5 +12,5 @@ router = APIRouter()
 async def alive(db: AsyncSession = Depends(get_connection)) -> BoolResponse:
     # there had to be checks for ElasticSearch, postgres, and redis,
     # but there will be only for postgres
-    await db.execute(select(func.current_timestamp))
+    await db.execute(select(func.current_timestamp()))
     return BoolResponse(ok=True)
