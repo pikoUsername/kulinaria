@@ -50,6 +50,16 @@ It is most likely caused by POSTGRES_HOST not pointing to its localhost.
    DATABASE_URL=postgresql://postgres:postgres@0.0.0.0:5432/rwdb
 
 
+Parser
+---------
+To run parser, simply run ``python -m parser``, then it will show help page.
+If you need to scrap data from e-katalog, run ``python -m parser parse-data --url-file <json-file>``.
+
+Then it will load all data to ``./assets/db.csv`` by default, then you can load those data,
+using ``python -m parser load-data --dsn <postgres-dsn>`` command.
+
+It does run very *slow*, because of bad code design inside.
+But who cares? It's python script.
 
 Run tests
 ---------
