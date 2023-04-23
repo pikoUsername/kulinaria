@@ -20,7 +20,7 @@ class ProductInDB(IDModelMixin, DateTimeModelMixin, RWModel):
 	slug: str = Field(max_length=126)
 	sellers: List[ProductSellerInDB] = []
 	comments: List[CommentInDB] = []
-	tags: List[TagsInDB] = []
+	tags: Optional[List[TagsInDB]] = []
 	rating: Optional[float] = Field(default=0.0)
 	category: Optional[CategoryInDB] = None
 	watches: int = 0

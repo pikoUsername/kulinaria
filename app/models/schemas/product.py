@@ -29,6 +29,7 @@ class ProductInCreate(RWSchema):
 	slug: str
 	sellers: List[ProductSellerInCreate]
 	tags: List[TagsInCreate]
+	rating: Optional[float] = None
 	category: str
 	description: str
 

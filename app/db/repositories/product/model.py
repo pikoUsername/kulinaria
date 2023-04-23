@@ -26,7 +26,7 @@ class Products(TimedModel):
     product_lists: Mapped[List["ProductLists"]] = relationship(secondary=ListsToProducts, lazy='selectin',
                                                                back_populates="products")
     reviews: Mapped[Optional[List["Reviews"]]] = relationship()  # 1:many
-    rating: Mapped[Optional[float]] = mapped_column()
+    rating = sa.Column(sa.Float, nullable=True)
     watches = sa.Column(sa.Integer, default=0)
     category: Mapped["Category"] = relationship(back_populates="products", lazy='selectin')  # M:1
     category_id: Mapped[int] = mapped_column(sa.ForeignKey("categories.id"))

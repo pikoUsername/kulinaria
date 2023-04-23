@@ -53,9 +53,14 @@ class ContentLoader:
                         )
                     )
 
+                if product_data.rating == -1 or not product_data.rating:
+                    rating = None
+                else:
+                    rating = float(product_data.rating)
                 product_in_create = ProductInCreate(
                     name=product_data.name,
                     tags=result_tags,
+                    rating=rating,
                     description=product_data.short_description,
                     category=product_data.category,
                     sellers=result_sellers,
