@@ -28,6 +28,39 @@ from app.services.utils import convert_db_obj_to_model, convert_list_obj_to_mode
 router = APIRouter(tags=["product"])
 
 
+
+@router.get(
+	"/random",
+	name="product:random"
+)
+async def random_products(
+		limit: int = 10,
+		db: AsyncSession = Depends(get_connection),
+) -> ProductListsInResponse:
+	products = await ProductsCRUD.random(db, limit)
+	if products:
+		return ProductListsInResponse(products=[], size=0)
+	return ProductListsInResponse(
+		products=products,
+		size=len(products)
+	)
+
+
+@router.get(
+	"/all",
+	name="product:get-all-products"
+)
+async def get_all_products(
+		limit: int = 10,
+		db: AsyncSession = Depends(get_connection),
+) -> ProductListsInResponse:
+	products = await ProductsCRUD.get_multi(db, limit)
+	return ProductListsInResponse(
+		products=products,
+		size=len(products) if products else None
+	)
+
+
 @router.get(
 	'/get_cart',
 	name="product:get_cart",
@@ -283,19 +316,4 @@ async def add_favourite(
 	return BoolResponse(ok=True)
 
 
-@router.get(
-	"/random",
-	name="product:random"
-)
-async def random_products(
-		limit: int,
-		db: AsyncSession = Depends(get_connection),
-) -> ProductListsInResponse:
-	products = await ProductsCRUD.random(db, limit)
-	if products:
-		return ProductListsInResponse(products=[], size=0)
-	return ProductListsInResponse(
-		products=products,
-		size=len(products)
-	)
 
