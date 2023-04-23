@@ -75,10 +75,15 @@ class Parser:
                         break
                     logger.info(f"Parsing data url of: {sub_url}")
                     content = await (await self.client.get(self.parent_url + sub_url)).text()
-                    rating = self.extract_rating_from_short_info(content_category, sub_url)
-                    result_ = await self.extract_detailed_info_from_page(content, sub_url, rating)
-                    result_list.append(result_)
-                    j += 1
+                    try:
+                        rating = self.extract_rating_from_short_info(content_category, sub_url)
+                        result_ = await self.extract_detailed_info_from_page(content, sub_url, rating)
+                    except Exception as exc:
+                        logger.exception(exc)
+                    else:
+                        result_list.append(result_)
+                    finally:
+                        j += 1
                 result.extend(result_list)
 
         return result
