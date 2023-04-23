@@ -316,4 +316,41 @@ async def add_favourite(
 	return BoolResponse(ok=True)
 
 
+@router.delete(
+	"/{product_id}/cart/delete",
+	name="product:delete-from-cart",
+)
+async def delete_product_from_cart(
+		product_id: int,
+		user: Users = Depends(get_current_user_authorizer(required=True)),
+		db: AsyncSession = Depends(get_connection),
+) -> BoolResponse:
+	product = await ProductsCRUD.get(db, id=product_id)
+	if not product:
+		raise HTTPException(
+			detail=strings.DOES_NOT_EXISTS.format(
+				model=Products.__tablename__,
+				id=product_id
+			),
+			status_code=400,
+		)
+	await UserCrud.delete_from_cart(db, user, product)
+	return BoolResponse(ok=True, additional_info={"product_id": product.id})
+
+
+@router.get(
+	"/random",
+	name="product:random"
+)
+async def random_products(
+		limit: int,
+		db: AsyncSession = Depends(get_connection),
+) -> ProductListsInResponse:
+	products = await ProductsCRUD.random(db, limit)
+	if products:
+		return ProductListsInResponse(products=[], size=0)
+	return ProductListsInResponse(
+		products=products,
+		size=len(products)
+	)
 

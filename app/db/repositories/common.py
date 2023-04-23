@@ -131,7 +131,6 @@ class BaseCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 			if isinstance(value, (list, tuple, set)) and value is not None:
 				rel = getattr(db_obj, key)
 				for val in value:
-					logger.info(f"{key}: {val.__dict__}")
 					rel.append(val)
 				continue
 			setattr(db_obj, key, value)

@@ -75,10 +75,15 @@ class Parser:
                         break
                     logger.info(f"Parsing data url of: {sub_url}")
                     content = await (await self.client.get(self.parent_url + sub_url)).text()
-                    rating = self.extract_rating_from_short_info(content_category, sub_url)
-                    result_ = await self.extract_detailed_info_from_page(content, sub_url, rating)
-                    result_list.append(result_)
-                    j += 1
+                    try:
+                        rating = self.extract_rating_from_short_info(content_category, sub_url)
+                        result_ = await self.extract_detailed_info_from_page(content, sub_url, rating)
+                    except Exception as exc:
+                        logger.exception(exc)
+                    else:
+                        result_list.append(result_)
+                    finally:
+                        j += 1
                 result.extend(result_list)
 
         return result
@@ -303,30 +308,3 @@ def parse_data(urls: Dict[str, str], file: str, limit: int) -> None:
         raise
     finally:
         loop.run_until_complete(parser.close())
-
-
-def run_parser(file: str):
-    """
-    Раннится с помощью крона в ночь
-    Потом выгружает в ночь в csv формат.
-    Парсит данные об продуктах на платформе e-katalog
-    и сразу же загружает эти данные в базу данных
-    Это реализация будет использвать asyncio
-
-    вопрос: как будет ранится бд?
-    как будет организовано взаимодействие с бд?
-    будет ли переиспользваны друие модули?
-
-    1, 2) С помощью моделей в бд, как обычно
-    создается мета и тд и тп. да, тоесть будет
-    две сессии которые будут записывать в одну бд
-    3) будут использваны модули core, и db.
-    """
-    from app.core.config import get_app_settings
-
-    parser = Parser(file, urls=TEST_PARSING_URLS)
-
-    runner = ParserRunner(parser, get_app_settings())
-
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(runner.run())

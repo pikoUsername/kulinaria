@@ -1,8 +1,7 @@
 from typing import TYPE_CHECKING, List, cast
 
 from loguru import logger
-from sqlalchemy import select, func, cast as sql_cast
-from sqlalchemy.dialects.postgresql import TSVECTOR, TSQUERY
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.schemas.category import CategoryInCreate
@@ -77,9 +76,6 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 		tags = []
 		for tag in obj_in.tags:
 			tags.append(fill(tag, ProductTags))
-
-		logger.info(f"db tags: {tags}")
-
 		category = CategoryInCreate(
 			name=obj_in.category,
 			slug=generate_slug_for_category(obj_in.category),
@@ -127,13 +123,14 @@ class ProductsCRUD(BaseCrud[Products, ProductInCreate, ProductInUpdate]):
 				)
 			)
 
-		stmt = select(Products).where(
+		stmt = select(Products).distinct().where(
 			*request
 		).join(ProductSeller).join(Category).join(ProductTags).limit(
 			pagination_info.for_page
 		).offset(
 			pagination_info.current_index * pagination_info.for_page
 		)
+		logger.info(stmt)
 
 		results = await db.execute(stmt)
 		results = results.scalars()
