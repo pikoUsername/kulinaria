@@ -3,7 +3,7 @@ from typing import List, Optional
 from .product_seller import ProductSellerInCreate
 from .rwschema import RWSchema
 
-from app.models.domain import CommentInDB, ProductInDB
+from app.models.domain import CommentInDB, ProductInDB, CategoryInDB
 from app.models.domain import TagsInDB
 from app.models.domain import TextEntitiesInDB
 from app.models.domain import ReviewInDB
@@ -21,6 +21,7 @@ class ProductInResponse(RWSchema, IDModelMixin):
 	watches: int = 0
 	rating: Optional[float] = 0.0
 	description: str
+	category: Optional[CategoryInDB] = None 
 	text_entities: List[TextEntitiesInDB] = []
 
 

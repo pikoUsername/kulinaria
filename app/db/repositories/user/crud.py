@@ -101,3 +101,11 @@ class UserCrud(BaseCrud[Users, UserInCreate, UserInUpdate]):
 	async def set_admin(cls, db: AsyncSession, user: Users, is_admin: bool = False) -> None:
 		user.is_stuff = is_admin
 		await db.flush([user])
+
+	@classmethod
+	async def delete_from_cart(cls, db: AsyncSession, user: Users, product: Products) -> None:
+		# just deletes it
+		user.cart.products.remove(product)
+		db.add(user)
+		await db.commit()
+		await db.refresh(user)
