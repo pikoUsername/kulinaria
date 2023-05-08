@@ -8,7 +8,7 @@ from sqlalchemy.orm import relationship, Mapped
 from app.db.repositories.base import TimedModel
 
 if TYPE_CHECKING:
-    from app.db.repositories.product import Products
+    from app.db.repositories.recipe import Recipe
 
 
 class Category(TimedModel):
@@ -16,8 +16,7 @@ class Category(TimedModel):
 
     name = sa.Column(sa.String(52), primary_key=True)
     slug = sa.Column(sa.String(128))
-    # dont change lazy=selectin, otherwise it will load hundreds of products
-    products: Mapped[List["Products"]] = relationship(back_populates="category")
+    recipe: Mapped[List["Recipe"]] = relationship(back_populates="category")
 
     ts_vector = sa.Column(TSVECTOR(), sa.Computed(
         "to_tsvector('russian', name)",

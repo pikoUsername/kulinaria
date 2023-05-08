@@ -41,3 +41,11 @@ class TextEntityUser(TextEntity):
 	user_id: Mapped[int] = mapped_column(
 		sa.ForeignKey("users.id", ondelete="CASCADE")
 	)
+
+
+class TextEntityRecipe(TextEntity):
+	__tablename__ = "text_entities_recipes"
+
+	recipe_id: Mapped[int] = mapped_column(
+		sa.ForeignKey("recipes.id", ondelete="CASCADE")
+	)

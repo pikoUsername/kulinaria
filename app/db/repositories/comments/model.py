@@ -17,7 +17,7 @@ class Comments(TimedModel):
 	__tablename__ = "comments"
 
 	is_hidden = sa.Column(sa.Boolean, default=False)
-	product_id: Mapped[int] = mapped_column(sa.ForeignKey("products.id"))
+	recipe_id: Mapped[int] = mapped_column(sa.ForeignKey("recipes.id"))
 	content = sa.Column(sa.String(256), nullable=False)
 	likes: Mapped[int] = mapped_column(default=0)
 	author_id: Mapped[int] = mapped_column(sa.ForeignKey("users.id", ondelete="SET NULL"))

@@ -4,4 +4,4 @@ from .model import Recipe
 
 
 class RecipeCrud(BaseCrud[Recipe, RecipeInCreate, RecipeInUpdate]):
-    model = Ingredient
+    model = Recipe
