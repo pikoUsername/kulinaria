@@ -16,7 +16,7 @@ class Category(TimedModel):
 
     name = sa.Column(sa.String(52), primary_key=True)
     slug = sa.Column(sa.String(128))
-    recipe: Mapped[List["Recipe"]] = relationship(back_populates="category")
+    recipes: Mapped[List["Recipe"]] = relationship(back_populates="category")
 
     ts_vector = sa.Column(TSVECTOR(), sa.Computed(
         "to_tsvector('russian', name)",
