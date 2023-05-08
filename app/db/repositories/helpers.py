@@ -28,6 +28,14 @@ PermissionsToGroups = sa.Table(
 )
 
 
+RecipeToIngredient = sa.Table(
+	"recipe_to_ingredient",
+	Meta,
+	sa.Column("recipe_id", sa.ForeignKey("recipes.id"), primary_key=True),
+	sa.Column("ingredient_id", sa.ForeignKey("ingredients.id"), primary_key=True),
+)
+
+
 def get_tables():
 	"""
 	Дает все таблицы которые определены в models.py

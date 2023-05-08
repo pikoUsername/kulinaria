@@ -1,13 +1,10 @@
-from typing import Optional, List
+from typing import Optional
 
 import sqlalchemy as sa
-from loguru import logger
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.db.repositories.common import BaseCrud
-from app.models.domain import User, ProductListInDB
+from app.models.domain import User
 from app.models.schemas.users import UserInCreate, UserInUpdate
 from app.services.enums import GlobalGroups, GlobalPermissions
 from app.services.security import get_password_hash, verify_password
@@ -18,10 +15,7 @@ from .model import Users
 __all__ = "UserCrud",
 
 from ..groups import GroupsCRUD
-from ..helpers import ListsToProducts
 from ..permissions import PermissionsCrud
-from ..product import Products
-from ..product_list import ProductListCrud, ProductLists
 
 
 class UserCrud(BaseCrud[Users, UserInCreate, UserInUpdate]):
@@ -71,31 +65,8 @@ class UserCrud(BaseCrud[Users, UserInCreate, UserInUpdate]):
 			groups=[group],
 			permission=perm,
 		)
-		await cls.create_product_cart(db, user)
 
 		return user
-
-	@classmethod
-	async def create_product_cart(cls, db: AsyncSession, user: Users) -> ProductLists:
-		product_list = ProductListInDB(
-			name="cart",
-			products=[]
-		)
-		cart = await ProductListCrud.create_with_relationship(db, product_list, user=user)
-		user.cart = cart
-		db.add(user)
-		await db.flush([user])
-		return cart
-
-	@classmethod
-	async def add_product_cart(cls, db: AsyncSession, user: Users, product: Products) -> None:
-		cart = await ProductListCrud.get_by_kwargs(db, user_id=user.id)
-		await ProductListCrud.add_products(db, cart, product)
-		await db.flush([cart])
-
-	@classmethod
-	async def get_cart(cls, user: Users) -> List[Products]:
-		return user.cart.products
 
 	@classmethod
 	async def set_admin(cls, db: AsyncSession, user: Users, is_admin: bool = False) -> None:

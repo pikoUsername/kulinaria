@@ -35,14 +35,6 @@ class TextEntityReview(TextEntity):
 	)
 
 
-class TextEntityProduct(TextEntity):
-	__tablename__ = "text_entities_products"
-
-	product_id: Mapped[int] = mapped_column(
-		sa.ForeignKey("products.id", ondelete="CASCADE")
-	)
-
-
 class TextEntityUser(TextEntity):
 	__tablename__ = "text_entities_users"
 

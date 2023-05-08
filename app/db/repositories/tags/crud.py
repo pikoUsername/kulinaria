@@ -6,4 +6,3 @@ from .model import Tags
 
 class TagsCRUD(BaseCrud[Tags, TagsInDB, TagsInDB]):
 	model = Tags
-

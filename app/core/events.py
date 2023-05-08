@@ -5,7 +5,6 @@ from loguru import logger
 
 from app.core.settings.app import AppSettings
 from app.db.events import close_db_connection, connect_to_db, create_default_permissions, create_default_groups
-from app.services.filler import ModelsFiller
 
 
 def create_start_app_handler(
