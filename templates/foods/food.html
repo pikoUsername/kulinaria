@@ -6,13 +6,13 @@
     <div class="map">
         <a href="{% url 'home' %}" style="text-decoration-line: underline">Главная</a>
          /
-        <a href="{% url 'category' food.cat.id %}" style="text-decoration-line: underline">{{ food.cat.name }}</a>
+        <a href="{% url 'category' category.pk %}" style="text-decoration-line: underline">{{ category.name }}</a>
          /
         <span style="color: white">{{ food.title }}</span>
     </div>
     <div class="short-description">
         <h2>{{ food.title }}</h2>
-        <img src="/media/{{ food.photo }}" alt="Nothing" width="200px" height="200px" style="float: right">
+        <img src="/media/{{ food.photo }}" alt="Nothing" width="200px" height="200px" class="img-article-left">
         <p>{{ food.content }}</p>
     </div>
     <hr>
@@ -21,7 +21,7 @@
         <tr>
             <td>
                 <span style="font-size: 125%">Ингредиенты</span>
-                <span style="color: gray; font-size: 80%">(На {{ food.portions }})</span>
+                <span style="color: gray; font-size: 80%">(На {{ food.portions }} порции)</span>
             </td>
         </tr>
         {% for ing in ingredients %}

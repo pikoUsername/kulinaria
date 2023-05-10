@@ -10,7 +10,7 @@
 
 {% block content %}
 
-<div class="container signup-container">
+<div class="container signup-container" style="background-color: #d4d4d4; ">
 <h1>Login</h1>
 
 {% if form.errors %}
@@ -51,7 +51,7 @@
 </form>
 
 {# Assumes you setup the password_reset view in your URLconf #}
-<p><a href="{% url 'password_reset' %}">Lost password?</a></p>
+<p><a href="{% url 'password_reset' %}" style="color: black">Lost password?</a></p>
 </div>
 
 {% endblock %}

@@ -5,7 +5,7 @@ from .models import Ingredients, FoodIngredients, Foods, Category
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ('name',)
 
 
 @admin.register(Ingredients)
@@ -25,3 +25,6 @@ class FoodIngredientsInline(admin.TabularInline):
 @admin.register(Foods)
 class FoodsAdmin(admin.ModelAdmin):
     inlines = (FoodIngredientsInline,)
+
+    search_fields = ('title', 'content')
+    list_filter = ('is_published', 'time_create')

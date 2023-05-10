@@ -81,8 +81,14 @@ class AddPostView(generic.CreateView):
             ing.save()
         form.save()
 
+
 def showcategory(request, cat_id):
-    return HttpResponse(f"Отображение категории с id= {cat_id}")
+    cat = Category.objects.get(pk=cat_id)
+    foods = Foods.objects.filter(cat__pk=cat_id)
+
+    context = {'category': cat, 'foods': foods}
+
+    return render(request, 'foods/category.html', context=context)
 
 
 def show_post(request, post_id: int):
