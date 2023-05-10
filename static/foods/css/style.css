@@ -396,3 +396,35 @@ color:#1E5945;}
 .short-description {
     display: inline;
 }
+
+button[data-add-portion] {
+    display: flex;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    overflow: hidden;
+    margin: 0px;
+    position: relative;
+    border: 0 none;
+    background: none;
+    position: relative;
+    top: 5px;
+}
+
+.portions {
+    display: flex;
+}
+
+.portions-adder {
+    display: flex;
+    vertical-margin: 0px;
+}
+
+.map {
+    background-color: #89AC76;
+    padding: 10px;
+    border: solid 1px #f0ebcd
+}

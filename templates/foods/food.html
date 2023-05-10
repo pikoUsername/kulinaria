@@ -2,10 +2,17 @@
 
 {% block content %}
 
-<div class="container">
+<div>
+    <div class="map">
+        <a href="{% url 'home' %}" style="text-decoration-line: underline">Главная</a>
+         /
+        <a href="{% url 'category' food.cat.id %}" style="text-decoration-line: underline">{{ food.cat.name }}</a>
+         /
+        <span style="color: white">{{ food.title }}</span>
+    </div>
     <div class="short-description">
         <h2>{{ food.title }}</h2>
-        <img src="/media/{{ food.photo }}" alt="Nothing" width="200px" height="200px" style="float: left">
+        <img src="/media/{{ food.photo }}" alt="Nothing" width="200px" height="200px" style="float: right">
         <p>{{ food.content }}</p>
     </div>
     <hr>
@@ -21,16 +28,38 @@
         <tr>
             <td>
                 {% if ing.mass %}
-                <span>{{ ing.ingredient.name }} - {{ ing.mass }}</span>
+                <div>{{ ing.ingredient.name }} - <span class="product-counter">{{ ing.mass }}</span> г</div>
                 {% else %}
-                <span>{{ ing.ingredient.name }} - {{ ing.amount }}</span>
+                <div>{{ ing.ingredient.name }} - <span class="product-counter">{{ ing.amount }}</span> шт</div>
                 {% endif %}
             </td>
         </tr>
         {% endfor %}
         </tbody>
     </table>
-    <p> Калорийность 1 порции еды - {{ calories }} ккал</p>
+    <p> Калорийность {{ food.portions }} порции еды - {{ calories }} ккал</p>
+    <div class="portions" >
+        <span>Количество порции </span>
+        <span class="yield-value">{{ food.portions }}</span>
+        <span class="portions-adder">
+            <button type="button" data-add-portion="1">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="30px" height="30px">
+                    <path d="M 25 2 C 12.309295 2 2 12.309295 2 25 C 2 37.690705 12.309295 48 25 48 C 37.690705 48 48 37.690705 48 25 C 48 12.309295 37.690705 2 25 2 z M 25 4 C 36.609824 4 46 13.390176 46 25 C 46 36.609824 36.609824 46 25 46 C 13.390176 46 4 36.609824 4 25 C 4 13.390176 13.390176 4 25 4 z M 24 13 L 24 24 L 13 24 L 13 26 L 24 26 L 24 37 L 26 37 L 26 26 L 37 26 L 37 24 L 26 24 L 26 13 L 24 13 z"/>
+                </svg>
+            </button>
+            <button type="button" data-add-portion="-1">
+                <svg xmlns="http://www.w3.org/2000/svg" version="1.0" width="30px" height="30px" viewBox="0 0 50.000000 50.000000" preserveAspectRatio="xMidYMid meet">
+                    <g transform="translate(0.000000,50.000000) scale(0.100000,-0.100000)" fill="#000000" stroke="none">
+                    <path d="M155 456 c-60 -28 -87 -56 -114 -116 -36 -79 -19 -183 42 -249 33 -36 115 -71 167 -71 52 0 134 35 167 71 34 37 63 110 63 159 0 52 -35 134 -71 167 -37 34 -110 63 -159 63 -27 0 -65 -10 -95 -24z m180 -15 c128 -58 164 -223 72 -328 -101 -115 -283 -88 -348 52 -79 171 104 354 276 276z"/>
+                    <path d="M130 250 c0 -6 47 -10 120 -10 73 0 120 4 120 10 0 6 -47 10 -120 10 -73 0 -120 -4 -120 -10z"/>
+                    </g>
+                </svg>
+            </button>
+        </span>
+    </div>
+
+    {% load static %}
+    <script src="{% static 'foods/js/food_calc.js' %}"></script>
 </div>
 
 {% endblock %}

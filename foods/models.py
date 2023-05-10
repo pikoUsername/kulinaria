@@ -24,7 +24,6 @@ class Ingredients(TimedModel):
     calories = models.PositiveIntegerField(null=True)
 
 
-
 class Foods(TimedModel):
     # you can use foods.ingredients_set
     title = models.CharField(max_length=255)

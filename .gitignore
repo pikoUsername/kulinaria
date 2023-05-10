@@ -20,6 +20,7 @@ venv/
 lib64/
 parts/
 sdist/
+temp/
 var/
 logs/
 wheels/
