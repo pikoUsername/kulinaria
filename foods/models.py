@@ -36,6 +36,7 @@ class Foods(TimedModel):
     cat = models.ForeignKey(Category, on_delete=models.PROTECT, null=True, blank=True)
 
     portions = models.PositiveSmallIntegerField(verbose_name="Порции", null=True)
+    calories = models.PositiveIntegerField(null=True)
 
     def __str__(self):
         return self.title
