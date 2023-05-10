@@ -35,6 +35,8 @@ class Foods(TimedModel):
     is_published = models.BooleanField(default=True)
     cat = models.ForeignKey(Category, on_delete=models.PROTECT, null=True, blank=True)
 
+    portions = models.PositiveSmallIntegerField(verbose_name="Порции", null=True)
+
     def __str__(self):
         return self.title
 
@@ -52,5 +54,6 @@ class Foods(TimedModel):
 class FoodIngredients(TimedModel):
     # in gramms
     mass = models.PositiveIntegerField(null=False)
+    amount = models.PositiveIntegerField(null=False)
     ingredient = models.OneToOneField(Ingredients, on_delete=models.CASCADE)
     food = models.ForeignKey(Foods, on_delete=models.CASCADE)

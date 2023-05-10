@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+    <div class="short-description">
+        <h2>{{ food.title }}</h2>
+        <img src="/media/{{ food.photo }}" alt="Nothing" width="200px" height="200px" style="float: left">
+        <p>{{ food.content }}</p>
+    </div>
+    <hr>
+    <table class="ingredients">
+        <tbody>
+        <tr>
+            <td>
+                <span style="font-size: 125%">Ингредиенты</span>
+                <span style="color: gray; font-size: 80%">(На {{ food.portions }})</span>
+            </td>
+        </tr>
+        {% for ing in ingredients %}
+        <tr>
+            <td>
+                {% if ing.mass %}
+                <span>{{ ing.ingredient.name }} - {{ ing.mass }}</span>
+                {% else %}
+                <span>{{ ing.ingredient.name }} - {{ ing.amount }}</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <p> Калорийность еды - {{ calories }} ккал</p>
+</div>
+
+{% endblock %}

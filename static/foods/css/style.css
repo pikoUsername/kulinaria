@@ -386,4 +386,13 @@ ul.lang-list li a:hover {color: #fdc073;}
 font-family:Brush Script MT, Brush Script Std, cursive;
 color:#1E5945;}
 
+.container {
+    margin-left: auto;
+    margin-right: auto;
+    width: 70%;
+    padding: 20px;
+}
 
+.short-description {
+    display: inline;
+}
