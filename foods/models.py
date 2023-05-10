@@ -17,8 +17,6 @@ class Category(TimedModel):
         return self.name
 
 
-
-
 class Ingredients(TimedModel):
     # you can access food_ingredients through obj.food_ingredients_set
     name = models.CharField(null=False, max_length=128)
