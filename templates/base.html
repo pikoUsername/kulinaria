@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>{{title}}</title>
+	<title>{% block title %} Title {% endblock %}</title>
 	<link type="text/css" href="{% static 'foods/css/style.css' %}" rel="stylesheet" />
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,21 +13,32 @@
 {% block mainmenu %}
 		<div class="header">
 			<ul id="mainmenu" class="mainmenu">
-{% for m in menu %}
-	{% if not forloop.last %}
-			<li><a href="{% url m.url_name %}">{{m.title}}</a></li>
-	{% else %}
-			<li class="last"><a href="{% url m.url_name %}">{{m.title}}</a></li>
-	{% endif %}
-{% endfor %}
+				<li><a href="{% url 'about' %}">О сайте</a></li>
+				<li><a href="{% url 'add_page' %}">Добавить статью</a></li>
+				<li><a href="{% url 'contact' %}">Контакты</a></li>
+				{% if not user.is_authenticated %}
+				<li class="last"><a href="{% url 'login' %}">Войти</a></li>
+				<li class="last"><a href="{% url 'signup' %}">Зарегистрироваться</a></li>
+				{% else %}
+				<li class="last">{{ user.username }}</li>
+				<li class="last"><a href="{% url 'logout' %}">Выйти</a></li>
+				{% endif %}
+				<!--{% for m in menu %}-->
+<!--	{% if not forloop.last %}-->
+<!--			<li><a href="{% url m.url_name %}">{{m.title}}</a></li>-->
+<!--	{% else %}-->
+<!--			<li class="last"><a href="{% url m.url_name %}">{{m.title}}</a></li>-->
+<!--	{% endif %}-->
+<!--{% endfor %}-->
 			</ul>
 			<div class="clear"></div>
 		</div>
 {% endblock mainmenu %}
 
-{% block left-sidebar %}
+
 <table class="table-content" border=0 cellpadding="0" cellspacing="0">
-<tr>
+{% block left_sidebar %}
+	<tr>
 <!-- Sidebar слева -->
 	<td valign="top" class="left-chapters">
 	<ul id="leftchapters">

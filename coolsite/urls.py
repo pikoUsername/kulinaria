@@ -17,6 +17,7 @@ Including another URLconf
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
+import django.contrib.auth.urls
 
 from . import settings
 from foods.views import pageNotFound
@@ -24,11 +25,10 @@ from foods.views import pageNotFound
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('foods.urls')),
+    path('accounts/', include('users.urls')),
+    path('accounts/', include('django.contrib.auth.urls')),
 ]
 
-urlpatterns += [
-    path('accounts/', include('django.contrib.auth.urls'))
-]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT )

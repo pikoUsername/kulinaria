@@ -17,6 +17,16 @@ class Category(TimedModel):
         return self.name
 
 
+
+
+class Ingredients(TimedModel):
+    # you can access food_ingredients through obj.food_ingredients_set
+    name = models.CharField(null=False, max_length=128)
+    price = models.PositiveIntegerField(null=False)
+    calories = models.PositiveIntegerField(null=True)
+
+
+
 class Foods(TimedModel):
     # you can use foods.ingredients_set
     title = models.CharField(max_length=255)
@@ -25,7 +35,7 @@ class Foods(TimedModel):
     photo = models.ImageField(upload_to="photos/%Y/%m/%d/")
 
     is_published = models.BooleanField(default=True)
-    cat = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
+    cat = models.ForeignKey(Category, on_delete=models.PROTECT, null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -39,13 +49,6 @@ class Foods(TimedModel):
 
     def get_absoluted_url(self):
         return reverse('category', kwargs={'cat_id': self.pk})
-
-
-class Ingredients(TimedModel):
-    # you can access food_ingredients through obj.food_ingredients_set
-    name = models.CharField(null=False, max_length=128)
-    price = models.PositiveIntegerField(null=False)
-    calories = models.PositiveIntegerField(null=True)
 
 
 class FoodIngredients(TimedModel):
