@@ -85,21 +85,23 @@ class AddPostView(generic.CreateView):
 def showcategory(request, cat_id):
     cat = Category.objects.get(pk=cat_id)
     foods = Foods.objects.filter(cat__pk=cat_id)
+    cats = Category.objects.all()
 
-    context = {'category': cat, 'foods': foods}
+    context = {'category': cat, 'foods': foods, 'cats': cats, 'cat_selected': cat.pk}
 
     return render(request, 'foods/category.html', context=context)
 
 
 def show_post(request, post_id: int):
     food = get_object_or_404(Foods, pk=post_id)
-    ingredients = FoodIngredients.objects.filter(id=food.pk)
+    ingredients = FoodIngredients.objects.filter(food__id=food.pk)
+    cats = Category.objects.all()
 
     calories = 0
     for ing in ingredients:
         calories += ing.ingredient.calories
 
-    context = {'food': food, 'ingredients': ingredients, 'category': food.cat, 'calories': calories}
+    context = {'food': food, 'ingredients': ingredients, 'category': food.cat, 'calories': calories, 'cats': cats}
 
     return render(request, 'foods/food.html', context=context)
 
